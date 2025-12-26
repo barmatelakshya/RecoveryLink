@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-tabs {
+            background: white;
+            display: flex;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: #50BFC3;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #50BFC3;
+        }
+
+        .pain-scale {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .pain-btn {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .pain-btn.selected {
+            background: #50BFC3;
+            color: white;
+            border-color: #50BFC3;
+        }
+
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .symptom-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .symptom-checkbox.selected {
+            background: #f0f9ff;
+            border-color: #50BFC3;
+        }
+
+        .symptom-checkbox input {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #50BFC3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a9ca0;
+        }
+
+        .btn:disabled {
+            background: #28a745;
+            cursor: not-allowed;
+        }
+
+        .history-card {
+            background: #f8f9fa;
+            border-left: 4px solid #50BFC3;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .history-card b {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .history-card p {
+            margin: 4px 0;
+            color: #6c757d;
+        }
+
+        .chat-window {
+            background: #f8f9fa;
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.patient {
+            background: #50BFC3;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.doctor {
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .empty {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-good { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-critical { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome">
+            <span class="status-indicator status-good"></span>
+            Welcome back, <span id="patientName">Loading...</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('checkin')">📝 Check-in</button>
+        <button class="tab-btn" onclick="showTab('history')">📊 History</button>
+        <button class="tab-btn" onclick="showTab('chat')">💬 Chat</button>
+        <button class="tab-btn" onclick="showTab('profile')">👤 Profile</button>
+    </div>
+
+    <div class="container">
+        <!-- CHECK-IN SECTION -->
+        <section id="checkin-section" class="page-section active">
+            <h2>Daily Health Check-in</h2>
+            
+            <div class="success-msg" id="checkinSuccess">
+                ✅ Check-in submitted successfully! Your doctor has been notified.
+            </div>
+
+            <form id="checkinForm">
+                <div class="form-group">
+                    <label>How is your pain level today? (1 = No pain, 10 = Severe pain)</label>
+                    <div class="pain-scale" id="painScale"></div>
+                    <input type="hidden" id="painLevel" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Are you experiencing any symptoms?</label>
+                    <div class="symptoms-grid">
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'fever')">
+                            <input type="checkbox" value="fever"> 🌡️ Fever
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'nausea')">
+                            <input type="checkbox" value="nausea"> 🤢 Nausea
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'dizziness')">
+                            <input type="checkbox" value="dizziness"> 😵 Dizziness
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'swelling')">
+                            <input type="checkbox" value="swelling"> 🔴 Swelling
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'bleeding')">
+                            <input type="checkbox" value="bleeding"> 🩸 Bleeding
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'shortness_of_breath')">
+                            <input type="checkbox" value="shortness_of_breath"> 🫁 Shortness of Breath
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Any other concerns or observations..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">Submit Check-in</button>
+            </form>
+        </section>
+
+        <!-- HISTORY SECTION -->
+        <section id="history-section" class="page-section">
+            <h2>📊 Health History</h2>
+            <div id="historyList">
+                <div class="empty">Loading your health history...</div>
+            </div>
+        </section>
+
+        <!-- CHAT SECTION -->
+        <section id="chat-section" class="page-section">
+            <h2>💬 Chat with Doctor</h2>
+            <div class="chat-window">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty">No messages yet. Your doctor will contact you if needed.</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION -->
+        <section id="profile-section" class="page-section">
+            <h2>👤 My Profile</h2>
+            
+            <div class="success-msg" id="profileSuccess">
+                ✅ Profile updated successfully!
+            </div>
+
+            <div class="form-group">
+                <label for="nameInput">Full Name</label>
+                <input type="text" id="nameInput" placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+                <label for="ageInput">Age</label>
+                <input type="number" id="ageInput" placeholder="Enter your age">
+            </div>
+
+            <div class="form-group">
+                <label for="conditionInput">Medical Condition</label>
+                <input type="text" id="conditionInput" placeholder="e.g., Post-surgery recovery">
+            </div>
+
+            <div class="form-group">
+                <label for="emergencyContact">Emergency Contact</label>
+                <input type="text" id="emergencyContact" placeholder="Emergency contact number">
+            </div>
+
+            <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+        </section>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase.js';
+        import { 
+            collection, 
+            addDoc, 
+            doc,
+            getDoc,
+            setDoc,
+            query,
+            where,
+            orderBy,
+            onSnapshot,
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        let selectedPain = null;
+        let selectedSymptoms = [];
+        let patientId = 'patient_' + Math.random().toString(36).substr(2, 9);
+        let currentChatId = `chat_${patientId}`;
+
+        // Tab Navigation
+        window.showTab = function(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-section').classList.add('active');
+        };
+
+        // Generate Pain Scale
+        function generatePainScale() {
+            const painScale = document.getElementById('painScale');
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pain-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectPain(i);
+                painScale.appendChild(btn);
+            }
+        }
+
+        window.selectPain = function(level) {
+            selectedPain = level;
+            document.getElementById('painLevel').value = level;
+            
+            document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        };
+
+        window.toggleSymptom = function(element, symptom) {
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+                selectedSymptoms.push(symptom);
+            } else {
+                element.classList.remove('selected');
+                selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            }
+        };
+
+        // Check-in Form
+        document.getElementById('checkinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedPain) {
+                alert('Please select your pain level');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const today = new Date().toDateString();
+            const lastCheckin = localStorage.getItem('lastCheckinDate');
+
+            if (lastCheckin === today) {
+                alert('You have already submitted your check-in for today');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const notes = document.getElementById('notes').value;
+
+                await addDoc(collection(db, 'checkins'), {
+                    patientId: patientId,
+                    pain: selectedPain,
+                    symptoms: selectedSymptoms,
+                    notes: notes,
+                    createdAt: serverTimestamp()
+                });
+
+                // Auto-generate alert if needed
+                if (selectedPain >= 7 || 
+                    (selectedSymptoms.includes('fever') && selectedPain >= 6) ||
+                    (selectedSymptoms.includes('swelling') && selectedPain >= 7)) {
+                    
+                    await addDoc(collection(db, 'alerts'), {
+                        patientId: patientId,
+                        pain: selectedPain,
+                        symptoms: selectedSymptoms,
+                        level: selectedPain >= 8 ? 'critical' : 'warning',
+                        createdAt: serverTimestamp()
+                    });
+                }
+
+                // Success feedback
+                localStorage.setItem('lastCheckinDate', today);
+                document.getElementById('checkinSuccess').style.display = 'block';
+                document.getElementById('checkinForm').reset();
+                
+                selectedPain = null;
+                selectedSymptoms = [];
+                document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+                document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.classList.remove('selected'));
+
+                submitBtn.textContent = 'Check-in Submitted ✔';
+                
+                setTimeout(() => {
+                    document.getElementById('checkinSuccess').style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting check-in. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Check-in';
+            }
+        });
+
+        // Load Health History
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            const q = query(
+                collection(db, 'checkins'),
+                where('patientId', '==', patientId),
+                orderBy('createdAt', 'desc')
+            );
+
+            onSnapshot(q, snapshot => {
+                historyList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    historyList.innerHTML = '<div class="empty">No check-ins yet. Submit your first check-in!</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.createdAt?.toDate() || new Date();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'history-card';
+                    card.innerHTML = `
+                        <b>${date.toDateString()} - ${date.toLocaleTimeString()}</b>
+                        <p><strong>Pain Level:</strong> ${data.pain}/10</p>
+                        <p><strong>Symptoms:</strong> ${(data.symptoms || []).join(', ') || 'None'}</p>
+                        ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                    `;
+                    historyList.appendChild(card);
+                });
+            });
+        }
+
+        // Load Chat Messages
+        function loadChat() {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const q = query(
+                collection(db, 'messages'),
+                where('chatId', '==', currentChatId),
+                orderBy('timestamp')
+            );
+            
+            onSnapshot(q, snapshot => {
+                chatMessages.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    chatMessages.innerHTML = '<div class="empty">No messages yet. Your doctor will contact you if needed.</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.sender}`;
+                    messageDiv.textContent = message.text;
+                    chatMessages.appendChild(messageDiv);
+                });
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+
+        // Send Message
+        window.sendMessage = async function() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+
+            try {
+                await addDoc(collection(db, 'messages'), {
+                    chatId: currentChatId,
+                    sender: 'patient',
+                    text: text,
+                    timestamp: serverTimestamp()
+                });
+
+                input.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+        // Load Profile
+        async function loadProfile() {
+            try {
+                const profileRef = doc(db, 'patients', patientId);
+                const snap = await getDoc(profileRef);
+                
+                if (snap.exists()) {
+                    const data = snap.data();
+                    document.getElementById('nameInput').value = data.name || '';
+                    document.getElementById('ageInput').value = data.age || '';
+                    document.getElementById('conditionInput').value = data.condition || '';
+                    document.getElementById('emergencyContact').value = data.emergencyContact || '';
+                    document.getElementById('patientName').textContent = data.name || 'Patient';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Save Profile
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            try {
+                const profileRef = doc(db, 'patients', patientId);
+                
+                await setDoc(profileRef, {
+                    name: document.getElementById('nameInput').value,
+                    age: document.getElementById('ageInput').value,
+                    condition: document.getElementById('conditionInput').value,
+                    emergencyContact: document.getElementById('emergencyContact').value,
+                    patientId: patientId
+                }, { merge: true });
+
+                document.getElementById('profileSuccess').style.display = 'block';
+                document.getElementById('patientName').textContent = document.getElementById('nameInput').value || 'Patient';
+                
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Error saving profile. Please try again.');
+            }
+        });
+
+        // Logout
+        window.logout = function() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        // Check daily limit
+        function checkDailyLimit() {
+            const today = new Date().toDateString();
+            const lastCheckin = localStorage.getItem('lastCheckinDate');
+            
+            if (lastCheckin === today) {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Check-in Submitted ✔';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generatePainScale();
+            loadProfile();
+            loadHistory();
+            loadChat();
+            checkDailyLimit();
+        });
+
+        // Enter key for chat
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

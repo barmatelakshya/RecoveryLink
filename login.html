@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecoveryLink — Login</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      height: 100vh;
+    }
+
+    .login-page {
+      display: flex;
+      height: 100vh;
+      background: #ECFEFF;
+    }
+
+    /* LEFT SIDE */
+    .login-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* LOGIN CARD */
+    .auth-card {
+      background: white;
+      padding: 36px;
+      width: 360px;
+      border-radius: 18px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+    }
+
+    h2 {
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    #loginSubtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 20px;
+      margin-top: 0;
+    }
+
+    .role-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .role-toggle button {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid #dbeafe;
+      background: #ffffff;
+      color: #475569;
+      transition: all 0.2s ease;
+    }
+
+    .role-toggle button.active {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+
+    .role-toggle button:hover:not(.active) {
+      background: #f1f5f9;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      height: 44px;
+      background: #2563EB;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+    }
+
+    .link a {
+      color: #2563EB;
+      text-decoration: none;
+    }
+
+    /* RIGHT SIDE */
+    .login-right {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* IMAGE STYLE */
+    .login-right img {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 70%;
+      width: auto;
+      opacity: 0.95;
+      object-fit: contain;
+    }
+
+    /* MOBILE SAFE */
+    @media (max-width: 768px) {
+      .login-right {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-page">
+
+    <!-- LEFT: LOGIN FORM -->
+    <div class="login-left">
+      <div class="auth-card">
+        <div class="role-toggle">
+          <button id="patientBtn" class="active">Patient</button>
+          <button id="doctorBtn">Doctor</button>
+        </div>
+
+        <h2 id="loginTitle">Patient Login</h2>
+        <p id="loginSubtitle">Access your recovery dashboard</p>
+
+        <!-- DEMO CREDENTIALS HELPER -->
+        <div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #0369a1;">
+          <strong>Demo Credentials:</strong><br>
+          Patient: patient.demo@recoverylink.app / Patient@123<br>
+          Doctor: doctor.demo@recoverylink.app / Doctor@123
+        </div>
+
+        <input id="email" type="email" placeholder="Email" />
+        <input id="password" type="password" placeholder="Password" />
+
+        <button id="loginBtn">Login</button>
+        <button id="demoLoginBtn" style="background: #50BFC3; margin-top: 8px;">Quick Demo Login</button>
+
+        <p class="link" id="signupText">
+          New patient? <a href="signup.html">Create account</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- RIGHT: IMAGE -->
+    <div class="login-right">
+      <img src="Health professional team-amico.png" alt="Health Professional Team" />
+    </div>
+
+  </div>
+
+  <script type="module">
+    console.log("Login script starting...");
+
+    // Demo credentials
+    const DEMO_ACCOUNTS = {
+      patient: {
+        email: "patient.demo@recoverylink.app",
+        password: "Patient@123"
+      },
+      doctor: {
+        email: "doctor.demo@recoverylink.app", 
+        password: "Doctor@123"
+      }
+    };
+
+    // Wait for DOM to load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM loaded, setting up UI...");
+      
+      // Role toggle UI
+      const patientBtn = document.getElementById("patientBtn");
+      const doctorBtn = document.getElementById("doctorBtn");
+      const title = document.getElementById("loginTitle");
+      const subtitle = document.getElementById("loginSubtitle");
+      const signupText = document.getElementById("signupText");
+      const demoLoginBtn = document.getElementById("demoLoginBtn");
+      const loginBtn = document.getElementById("loginBtn");
+
+      console.log("Elements:", { patientBtn, doctorBtn, title, subtitle, signupText });
+
+      if (patientBtn && doctorBtn) {
+        patientBtn.onclick = function() {
+          console.log("Patient clicked");
+          patientBtn.classList.add("active");
+          doctorBtn.classList.remove("active");
+          title.innerText = "Patient Login";
+          subtitle.innerText = "Access your recovery dashboard";
+          signupText.innerHTML = `New patient? <a href="signup.html">Create account</a>`;
+        };
+
+        doctorBtn.onclick = function() {
+          console.log("Doctor clicked");
+          doctorBtn.classList.add("active");
+          patientBtn.classList.remove("active");
+          title.innerText = "Doctor Login";
+          subtitle.innerText = "Access clinical command center";
+          signupText.innerHTML = `<span style="color:#64748b;">Doctor accounts are provided by the hospital</span>`;
+        };
+      }
+
+      // Quick demo login
+      if (demoLoginBtn) {
+        demoLoginBtn.onclick = function() {
+          console.log("Demo login clicked");
+          const isPatientMode = patientBtn.classList.contains("active");
+          const demoAccount = isPatientMode ? DEMO_ACCOUNTS.patient : DEMO_ACCOUNTS.doctor;
+          
+          document.getElementById("email").value = demoAccount.email;
+          document.getElementById("password").value = demoAccount.password;
+        };
+      }
+
+      // Login functionality
+      if (loginBtn) {
+        loginBtn.onclick = async function() {
+          console.log("Login clicked");
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          if (!email || !password) {
+            alert("Please fill in all fields");
+            return;
+          }
+
+          try {
+            console.log("Importing Firebase...");
+            const { auth, db } = await import("./firebase.js");
+            const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js");
+            const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js");
+
+            console.log("Signing in...");
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCred.user;
+
+            console.log("Getting user role...");
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+
+            if (!userDoc.exists()) {
+              alert("User role not assigned. Please contact administrator.");
+              await auth.signOut();
+              return;
+            }
+
+            const userData = userDoc.data();
+            localStorage.setItem("role", userData.role);
+
+            console.log("Redirecting...", userData.role);
+            if (userData.role === "patient") {
+              window.location.href = "patient.html";
+            } else if (userData.role === "doctor") {
+              window.location.href = "doctor.html";
+            } else {
+              alert("Invalid role assigned. Please contact administrator.");
+            }
+
+          } catch (error) {
+            console.error("Login error:", error);
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+              alert("Invalid email or password. Please check your credentials.");
+            } else if (error.code === 'auth/invalid-email') {
+              alert("Invalid email format.");
+            } else {
+              alert("Login failed: " + error.message);
+            }
+          }
+        };
+      }
+    });
+
+    console.log("Script setup complete");
+  </script>
+          await auth.signOut();
+        }
+
+      } catch (err) {
+        console.error("Login error:", err); // Debug log
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

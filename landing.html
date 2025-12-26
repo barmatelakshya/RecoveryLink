@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecoveryLink - Post-Discharge Patient Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #50BFC3;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #50BFC3;
+        }
+
+        .cta-btn {
+            background: #50BFC3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .cta-btn:hover {
+            background: #3a9ca0;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 120px 0 80px;
+        }
+
+        .hero-text {
+            flex: 1;
+            max-width: 550px;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .stat {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .hero-image {
+            flex: 1;
+            text-align: center;
+            padding-left: 60px;
+        }
+
+        .hero-image img {
+            width: 520px;
+            max-width: 100%;
+            animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.2));
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Features Section */
+        .features {
+            background: white;
+            padding: 100px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 60px;
+            color: #2c3e50;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .feature-card p {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        /* Problem Section */
+        .problem {
+            background: #2c3e50;
+            color: white;
+            padding: 100px 0;
+        }
+
+        .problem-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .problem-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .problem-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .problem-stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #50BFC3;
+            display: block;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #50BFC3 0%, #3a9ca0 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn-white {
+            background: white;
+            color: #50BFC3;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 100px 0 60px;
+            }
+
+            .hero-image {
+                padding-left: 0;
+                margin-top: 40px;
+            }
+
+            .hero-text h1 {
+                font-size: 36px;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .problem-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">🏥 RecoveryLink</div>
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#problem">Problem</a>
+                    <a href="#solution">Solution</a>
+                </div>
+                <a href="login.html" class="cta-btn">Get Started</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-text">
+                <h1>Closing the gap between hospital discharge and full recovery</h1>
+                <p>Monitor patients after discharge with real-time health tracking, automated alerts, and seamless doctor-patient communication.</p>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">30%</span>
+                        <span class="stat-label">Readmission Reduction</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Patient Monitoring</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">Real-time</span>
+                        <span class="stat-label">Alert System</span>
+                    </div>
+                </div>
+
+                <a href="patient-dashboard-final.html" class="cta-btn" style="font-size: 18px; padding: 16px 32px;">Start Patient Dashboard</a>
+            </div>
+
+            <div class="hero-image">
+                <!-- Primary: Try PNG, Fallback: Use SVG -->
+                <img src="images/doctors.png" alt="Digital healthcare monitoring system" 
+                     onerror="this.src='images/healthcare-hero.svg'" 
+                     style="width: 520px; max-width: 100%; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.2));">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Complete Post-Discharge Care Solution</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Patient Dashboard</h3>
+                    <p>Daily check-ins, pain tracking, symptom reporting, and health history visualization for continuous monitoring.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚨</div>
+                    <h3>Smart Alerts</h3>
+                    <p>Automated risk detection with clinical-grade rules. Critical alerts for pain levels 8+ and symptom combinations.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Real-time Chat</h3>
+                    <p>Instant doctor-patient communication with message history and emergency escalation capabilities.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Doctor Dashboard</h3>
+                    <p>Live patient monitoring, alert management, triage table, and CSV export for hospital administration.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>HIPAA-Style Security</h3>
+                    <p>Role-based access control, encrypted data, audit trails, and healthcare-grade privacy protection.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Analytics & Trends</h3>
+                    <p>Recovery progress tracking, pain trend analysis, and predictive insights for better outcomes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem" id="problem">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">The Post-Discharge Care Gap</h2>
+            
+            <div class="problem-content">
+                <div>
+                    <h3 style="font-size: 28px; margin-bottom: 20px;">Critical Healthcare Challenge</h3>
+                    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px;">
+                        After hospital discharge, patients face a dangerous gap in care monitoring. 
+                        Without continuous oversight, complications go undetected, leading to 
+                        emergency readmissions and poor recovery outcomes.
+                    </p>
+                    <p style="font-size: 18px; line-height: 1.6;">
+                        RecoveryLink bridges this gap with real-time monitoring, automated alerts, 
+                        and seamless communication between patients and healthcare providers.
+                    </p>
+                </div>
+
+                <div class="problem-stats">
+                    <div class="problem-stat">
+                        <span class="problem-stat-number">30%</span>
+                        <span>Patients readmitted within 30 days</span>
+                    </div>
+                    <div class="problem-stat">
+                        <span class="problem-stat-number">$15B</span>
+                        <span>Annual readmission costs in US</span>
+                    </div>
+                    <div class="problem-stat">
+                        <span class="problem-stat-number">72hrs</span>
+                        <span>Critical monitoring window</span>
+                    </div>
+                    <div class="problem-stat">
+                        <span class="problem-stat-number">0</span>
+                        <span>Current post-discharge monitoring</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="solution">
+        <div class="container">
+            <h2>Ready to Transform Post-Discharge Care?</h2>
+            <p>Join healthcare providers using RecoveryLink to reduce readmissions and improve patient outcomes.</p>
+            
+            <div class="cta-buttons">
+                <a href="patient-dashboard-final.html" class="btn-white">Patient Dashboard</a>
+                <a href="doctor-realtime.html" class="btn-white">Doctor Dashboard</a>
+                <a href="login.html" class="btn-white">Login System</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
+</body>
+</html>

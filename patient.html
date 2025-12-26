@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecoveryLink — Patient</title>
+  <link rel="stylesheet" href="patient.css">
+</head>
+<body>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="logo">RecoveryLink</div>
+
+      <nav>
+        <a class="nav-link active" data-page="dashboard">Dashboard</a>
+        <a class="nav-link" data-page="history">Health History</a>
+        <a class="nav-link" data-page="messages">Messages</a>
+        <a class="nav-link" data-page="profile">Profile</a>
+      </nav>
+
+      <div class="logout">Logout</div>
+    </aside>
+
+    <main class="main-content">
+      <!-- HEADER -->
+      <header class="top-bar">
+        <div class="greeting">Good Morning, Lakshya</div>
+        <div class="avatar">LB</div>
+      </header>
+
+      <!-- DASHBOARD PAGE -->
+      <section id="dashboard" class="page active">
+        <div class="container">
+
+          <!-- RECOVERY STATUS STRIP -->
+          <div class="status-strip">
+            <div>
+              <span class="label">Recovery Status</span>
+              <strong id="recoveryProgress">Loading...</strong>
+            </div>
+            <div class="badge warning" id="riskBadge">Loading...</div>
+          </div>
+
+          <!-- HEALTH METRICS -->
+          <div class="metrics">
+            <div class="metric">
+              <span>Pain Trend</span>
+              <strong id="painTrend">Loading...</strong>
+            </div>
+            <div class="metric">
+              <span>Last Check-in</span>
+              <strong id="lastCheckin">Loading...</strong>
+            </div>
+            <div class="metric">
+              <span>Days Tracked</span>
+              <strong id="daysTracked">Loading...</strong>
+            </div>
+          </div>
+
+          <!-- DAILY CHECK-IN CARD -->
+          <section class="card">
+            <h2>Daily Check-In</h2>
+
+            <!-- PAIN LEVEL -->
+            <div class="pain-header">
+              <span>Pain Level</span>
+              <span class="pain-value">6 • Moderate</span>
+            </div>
+            <input type="range" min="1" max="10" value="6" class="slider" id="painSlider"/>
+
+            <!-- SYMPTOMS -->
+            <label class="label">Symptoms</label>
+            <div class="symptom-summary">Selected: <span id="symptomCount">0</span> symptoms</div>
+            <div class="chips">
+              <button class="chip" data-symptom="nausea">Nausea</button>
+              <button class="chip danger" data-symptom="fever">Fever</button>
+              <button class="chip danger" data-symptom="swelling">Swelling</button>
+              <button class="chip" data-symptom="dizziness">Dizziness</button>
+            </div>
+
+            <!-- SUBMIT -->
+            <button class="primary-btn">Log Vitals</button>
+          </section>
+
+          <!-- DOCTOR'S NOTE -->
+          <div class="doctor-note">
+            <strong>Doctor's Note</strong>
+            <p>
+              Please monitor swelling closely today.
+              Contact us if pain exceeds level 7.
+            </p>
+          </div>
+
+          <!-- REPORTS -->
+          <section class="reports">
+            <h3>My Reports</h3>
+
+            <div class="report-row">
+              <span>📄 Discharge_Summary.pdf</span>
+              <span>⬇</span>
+            </div>
+
+            <div class="report-row">
+              <span>📄 Blood_Test.pdf</span>
+              <span>⬇</span>
+            </div>
+
+            <p class="hint">More reports will appear here as recovery progresses.</p>
+          </section>
+
+        </div>
+      </section>
+
+      <!-- HEALTH HISTORY PAGE -->
+      <section id="history" class="page">
+        <div class="container">
+          <h2>Health History</h2>
+          <div class="card">
+            <p>Your past check-ins and recovery trends will appear here.</p>
+            <p>Track your progress over time with detailed analytics and charts.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MESSAGES PAGE -->
+      <section id="messages" class="page">
+        <div class="container">
+          <h2>Messages</h2>
+          <div class="card">
+            <p>Chat with your doctor and healthcare team.</p>
+            <p>All your conversations are secure and HIPAA compliant.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROFILE PAGE -->
+      <section id="profile" class="page">
+        <div class="container">
+          <h2>Profile</h2>
+          <div class="card">
+            <p>Manage your personal information and account settings.</p>
+            <p>Update contact details, preferences, and privacy settings.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- CHAT BUTTON -->
+  <button class="chat-btn">💬</button>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { saveDailyCheckin } from "./checkin.js";
+    import { generateAnalytics } from "./analytics.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    // Protect patient dashboard with role checking
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log("No user logged in, redirecting to login...");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        // Check user role
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (!userDoc.exists()) {
+          console.log("User role not found, redirecting to login...");
+          await auth.signOut();
+          window.location.href = "login.html";
+          return;
+        }
+
+        const userRole = userDoc.data().role;
+        
+        if (userRole !== "patient") {
+          console.log("Access denied: not a patient, redirecting...");
+          window.location.href = "login.html";
+          return;
+        }
+
+        console.log("Patient access granted:", user.uid);
+        
+        // Load analytics when user is authenticated and authorized
+        await loadAnalytics(user.uid);
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        window.location.href = "login.html";
+      }
+    });
+
+    // Load and display analytics
+    async function loadAnalytics(patientId) {
+      try {
+        const analytics = await generateAnalytics(patientId);
+        
+        // Update recovery progress
+        document.getElementById('recoveryProgress').textContent = `${analytics.progress}% Completed`;
+        
+        // Update risk badge
+        const riskBadge = document.getElementById('riskBadge');
+        riskBadge.textContent = `${analytics.risk} Risk`;
+        riskBadge.className = `badge ${analytics.risk.toLowerCase()}`;
+        
+        // Update pain trend
+        const trendIcon = analytics.pain.trend === 'IMPROVING' ? '↓' : 
+                         analytics.pain.trend === 'WORSENING' ? '↑' : '→';
+        document.getElementById('painTrend').textContent = 
+          `${trendIcon} Avg ${analytics.pain.averagePain}`;
+        
+        // Update last check-in
+        document.getElementById('lastCheckin').textContent = 
+          analytics.lastCheckIn || 'No data';
+        
+        // Update days tracked
+        document.getElementById('daysTracked').textContent = 
+          `${analytics.daysTracked} days`;
+        
+        console.log('Analytics loaded:', analytics);
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      }
+    }
+
+    // Pain slider functionality
+    const painSlider = document.getElementById('painSlider');
+    const painValue = document.querySelector('.pain-value');
+
+    function updatePainValue(value) {
+      let severity, color;
+      if (value <= 3) {
+        severity = 'Stable';
+        color = '#10b981';
+      } else if (value <= 6) {
+        severity = 'Moderate';
+        color = '#f59e0b';
+      } else {
+        severity = 'Critical';
+        color = '#ef4444';
+      }
+      painValue.textContent = `${value} • ${severity}`;
+      painValue.style.color = color;
+    }
+
+    painSlider.addEventListener('input', (e) => {
+      updatePainValue(e.target.value);
+    });
+
+    // Symptom chips functionality
+    const chips = document.querySelectorAll('.chip');
+    const symptomCount = document.getElementById('symptomCount');
+    let selectedCount = 0;
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('active');
+        selectedCount = document.querySelectorAll('.chip.active').length;
+        symptomCount.textContent = selectedCount;
+      });
+    });
+
+    // Log Vitals button functionality
+    document.querySelector('.primary-btn').addEventListener('click', async () => {
+      try {
+        const painLevel = document.querySelector('.slider').value;
+        const selectedSymptoms = [...document.querySelectorAll('.chip.active')]
+          .map(chip => chip.textContent);
+        
+        const patientId = auth.currentUser ? auth.currentUser.uid : "demo_patient_123";
+        
+        await saveDailyCheckin(
+          patientId,
+          Number(painLevel),
+          selectedSymptoms
+        );
+        
+        // Reload analytics after check-in
+        await loadAnalytics(patientId);
+        
+        alert('Vitals logged successfully!');
+      } catch (error) {
+        console.error('Error saving check-in:', error);
+        alert('Error logging vitals. Please try again.');
+      }
+    });
+
+    // Page switching functionality
+    const navLinks = document.querySelectorAll(".nav-link");
+    const pages = document.querySelectorAll(".page");
+
+    navLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        // Remove active state from all links and pages
+        navLinks.forEach(l => l.classList.remove("active"));
+        pages.forEach(p => p.classList.remove("active"));
+
+        // Activate selected link and page
+        link.classList.add("active");
+        const targetPage = document.getElementById(link.dataset.page);
+        if (targetPage) {
+          targetPage.classList.add("active");
+        }
+      });
+    });
+
+    // Chat button functionality
+    document.querySelector('.chat-btn').addEventListener('click', () => {
+      openChat();
+    });
+
+    // Simple chat modal
+    function openChat() {
+      const chatModal = document.createElement('div');
+      chatModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      `;
+
+      chatModal.innerHTML = `
+        <div style="
+          background: white;
+          width: 400px;
+          height: 500px;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+        ">
+          <div style="padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Chat with Doctor</h3>
+            <button onclick="this.closest('.chat-modal').remove()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+          </div>
+          <div id="chatMessages" style="flex: 1; padding: 16px; overflow-y: auto; background: #f9fafb;">
+            <div style="text-align: center; color: #64748b; padding: 20px;">
+              Chat with your doctor about your recovery
+            </div>
+          </div>
+          <div style="padding: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 8px;">
+            <input id="chatInput" type="text" placeholder="Type your message..." style="flex: 1; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
+            <button onclick="sendChatMessage()" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Send</button>
+          </div>
+        </div>
+      `;
+
+      chatModal.className = 'chat-modal';
+      document.body.appendChild(chatModal);
+
+      // Focus input
+      document.getElementById('chatInput').focus();
+
+      // Enter key to send
+      document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendChatMessage();
+        }
+      });
+    }
+
+    // Send chat message function
+    window.sendChatMessage = async function() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      try {
+        const patientId = auth.currentUser ? auth.currentUser.uid : "demo_patient_123";
+        const doctorId = "doc_001";
+        const chatId = `chat_${patientId}_${doctorId}`;
+        
+        // Create chat document with participants if it doesn't exist
+        await setDoc(doc(db, "chats", chatId), {
+          participants: [patientId, doctorId],
+          lastMessage: message,
+          lastMessageTime: serverTimestamp()
+        }, { merge: true });
+        
+        // Add message to subcollection
+        await addDoc(
+          collection(db, "chats", chatId, "messages"),
+          {
+            senderId: patientId,
+            senderType: "patient",
+            text: message,
+            timestamp: serverTimestamp()
+          }
+        );
+
+        input.value = '';
+        
+        // Add to UI immediately
+        const messagesDiv = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+          background: #2563eb;
+          color: white;
+          padding: 8px 12px;
+          border-radius: 12px;
+          margin-bottom: 8px;
+          max-width: 80%;
+          margin-left: auto;
+          text-align: right;
+        `;
+        messageDiv.textContent = message;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Error sending message. Please try again.');
+      }
+    };
+
+    // Import required functions
+    import { addDoc, collection, serverTimestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RecoveryLink System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .test-section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: orange; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🏥 RecoveryLink System Test</h1>
+    
+    <div class="test-section">
+        <h3>🔥 Firebase Connection Test</h3>
+        <div id="firebaseStatus" class="loading">Testing Firebase connection...</div>
+        <button onclick="testFirebase()">Test Firebase</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🔐 Authentication Test</h3>
+        <div id="authStatus" class="loading">Ready to test authentication</div>
+        <button onclick="testPatientLogin()">Test Patient Login</button>
+        <button onclick="testDoctorLogin()">Test Doctor Login</button>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 Data Test</h3>
+        <div id="dataStatus" class="loading">Ready to test data operations</div>
+        <button onclick="testDataRead()">Test Data Read</button>
+        <button onclick="testDataWrite()">Test Data Write</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🚀 Navigation Test</h3>
+        <div id="navStatus" class="loading">Ready to test navigation</div>
+        <a href="login.html" target="_blank"><button>Test Login Page</button></a>
+        <a href="patient-fixed.html" target="_blank"><button>Test Patient Dashboard</button></a>
+        <a href="doctor.html" target="_blank"><button>Test Doctor Dashboard</button></a>
+    </div>
+
+    <script type="module">
+        // Test Firebase connection
+        window.testFirebase = async function() {
+            const status = document.getElementById('firebaseStatus');
+            status.textContent = 'Testing Firebase connection...';
+            status.className = 'loading';
+
+            try {
+                const { auth, db } = await import('./firebase.js');
+                status.textContent = '✅ Firebase connected successfully!';
+                status.className = 'success';
+            } catch (error) {
+                status.textContent = `❌ Firebase connection failed: ${error.message}`;
+                status.className = 'error';
+            }
+        };
+
+        // Test patient login
+        window.testPatientLogin = async function() {
+            const status = document.getElementById('authStatus');
+            status.textContent = 'Testing patient login...';
+            status.className = 'loading';
+
+            try {
+                const { auth, db } = await import('./firebase.js');
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js');
+                
+                const userCred = await signInWithEmailAndPassword(auth, 'patient.demo@recoverylink.app', 'Patient@123');
+                status.textContent = `✅ Patient login successful! UID: ${userCred.user.uid.substring(0, 8)}...`;
+                status.className = 'success';
+                
+                // Sign out
+                await auth.signOut();
+            } catch (error) {
+                status.textContent = `❌ Patient login failed: ${error.message}`;
+                status.className = 'error';
+            }
+        };
+
+        // Test doctor login
+        window.testDoctorLogin = async function() {
+            const status = document.getElementById('authStatus');
+            status.textContent = 'Testing doctor login...';
+            status.className = 'loading';
+
+            try {
+                const { auth, db } = await import('./firebase.js');
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js');
+                
+                const userCred = await signInWithEmailAndPassword(auth, 'doctor.demo@recoverylink.app', 'Doctor@123');
+                status.textContent = `✅ Doctor login successful! UID: ${userCred.user.uid.substring(0, 8)}...`;
+                status.className = 'success';
+                
+                // Sign out
+                await auth.signOut();
+            } catch (error) {
+                status.textContent = `❌ Doctor login failed: ${error.message}`;
+                status.className = 'error';
+            }
+        };
+
+        // Test data read
+        window.testDataRead = async function() {
+            const status = document.getElementById('dataStatus');
+            status.textContent = 'Testing data read...';
+            status.className = 'loading';
+
+            try {
+                const { db } = await import('./firebase.js');
+                const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js');
+                
+                const snapshot = await getDocs(collection(db, 'checkins'));
+                status.textContent = `✅ Data read successful! Found ${snapshot.size} check-ins`;
+                status.className = 'success';
+            } catch (error) {
+                status.textContent = `❌ Data read failed: ${error.message}`;
+                status.className = 'error';
+            }
+        };
+
+        // Test data write
+        window.testDataWrite = async function() {
+            const status = document.getElementById('dataStatus');
+            status.textContent = 'Testing data write...';
+            status.className = 'loading';
+
+            try {
+                const { db } = await import('./firebase.js');
+                const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js');
+                
+                await addDoc(collection(db, 'test'), {
+                    message: 'System test',
+                    timestamp: serverTimestamp()
+                });
+                
+                status.textContent = '✅ Data write successful!';
+                status.className = 'success';
+            } catch (error) {
+                status.textContent = `❌ Data write failed: ${error.message}`;
+                status.className = 'error';
+            }
+        };
+
+        // Auto-test Firebase on load
+        setTimeout(() => {
+            testFirebase();
+        }, 1000);
+    </script>
+</body>
+</html>

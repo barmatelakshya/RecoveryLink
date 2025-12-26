@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Test - RecoveryLink</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: bold; }
+        .critical { background: #fff5f5; border-left: 4px solid #dc3545; }
+        .warning { background: #fffbeb; border-left: 4px solid #ffc107; }
+        .stable { background: #f0fff4; border-left: 4px solid #28a745; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .status-badge.critical { background: #fed7d7; color: #c53030; }
+        .status-badge.warning { background: #fef5e7; color: #d69e2e; }
+        .status-badge.stable { background: #c6f6d5; color: #2f855a; }
+        .alert-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+        .alert-card.critical { border-left: 4px solid #dc3545; }
+        .alert-card.warning { border-left: 4px solid #ffc107; }
+        .new-badge { background: #dc3545; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <h1>👨‍⚕️ Doctor Dashboard Test</h1>
+    
+    <h2>📊 Patient Monitoring Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Pain</th>
+                <th>Status</th>
+                <th>Symptoms</th>
+            </tr>
+        </thead>
+        <tbody id="patientTableBody">
+            <tr><td colspan="4" style="text-align: center; color: #6c757d;">Loading patient data...</td></tr>
+        </tbody>
+    </table>
+
+    <h2>🚨 Active Alerts</h2>
+    <div id="alertsContainer">
+        <p style="color: #6c757d;">Loading alerts...</p>
+    </div>
+
+    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+        <h3>Real-time Features:</h3>
+        <ul>
+            <li>✅ Table updates automatically when patients submit vitals</li>
+            <li>✅ Alerts appear instantly for pain levels ≥7</li>
+            <li>✅ Color coding: Red (Critical), Yellow (Warning), Green (Stable)</li>
+            <li>✅ No page refresh needed - everything is live!</li>
+        </ul>
+    </div>
+
+    <script type="module" src="./doctor-dashboard.js"></script>
+</body>
+</html>

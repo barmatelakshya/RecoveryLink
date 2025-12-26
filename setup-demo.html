@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Demo Accounts</title>
+</head>
+<body>
+    <h2>Setting up Demo Accounts...</h2>
+    <div id="status">Initializing...</div>
+
+    <script type="module">
+        import { auth, db } from "./firebase.js";
+        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const statusDiv = document.getElementById('status');
+
+        async function createDemoAccounts() {
+            try {
+                statusDiv.innerHTML = "Creating patient demo account...";
+                
+                // Create patient account
+                const patientCred = await createUserWithEmailAndPassword(
+                    auth, 
+                    "patient.demo@recoverylink.app", 
+                    "Patient@123"
+                );
+                
+                await setDoc(doc(db, "users", patientCred.user.uid), {
+                    email: "patient.demo@recoverylink.app",
+                    role: "patient",
+                    patientId: "PAT-1001",
+                    name: "Demo Patient",
+                    createdAt: serverTimestamp()
+                });
+
+                statusDiv.innerHTML = "Creating doctor demo account...";
+                
+                // Create doctor account
+                const doctorCred = await createUserWithEmailAndPassword(
+                    auth,
+                    "doctor.demo@recoverylink.app",
+                    "Doctor@123"
+                );
+                
+                await setDoc(doc(db, "users", doctorCred.user.uid), {
+                    email: "doctor.demo@recoverylink.app",
+                    role: "doctor",
+                    doctorId: "DOC-9001",
+                    name: "Demo Doctor",
+                    createdAt: serverTimestamp()
+                });
+
+                statusDiv.innerHTML = "Creating demo patient data...";
+                
+                // Create patient profile
+                await setDoc(doc(db, "patients", "PAT-1001"), {
+                    name: "Demo Patient",
+                    email: "patient.demo@recoverylink.app",
+                    patientId: "PAT-1001",
+                    condition: "Post-Surgery Recovery",
+                    admissionDate: "2025-12-17",
+                    createdAt: serverTimestamp()
+                });
+
+                // Create sample check-ins
+                const checkinsData = [
+                    {
+                        patientId: "PAT-1001",
+                        patientName: "Demo Patient",
+                        painLevel: 3,
+                        symptoms: ["mild discomfort"],
+                        condition: "Post-Surgery Recovery",
+                        date: "2025-12-19",
+                        createdAt: serverTimestamp()
+                    },
+                    {
+                        patientId: "PAT-1001",
+                        patientName: "Demo Patient", 
+                        painLevel: 7,
+                        symptoms: ["increased pain", "swelling"],
+                        condition: "Post-Surgery Recovery", 
+                        date: "2025-12-21",
+                        createdAt: serverTimestamp()
+                    },
+                    {
+                        patientId: "PAT-1001",
+                        patientName: "Demo Patient",
+                        painLevel: 2,
+                        symptoms: ["much better"],
+                        condition: "Post-Surgery Recovery",
+                        date: "2025-12-23",
+                        createdAt: serverTimestamp()
+                    }
+                ];
+
+                for (const checkin of checkinsData) {
+                    await addDoc(collection(db, "checkins"), checkin);
+                }
+
+                // Create sample alert
+                await addDoc(collection(db, "alerts"), {
+                    patientId: "PAT-1001",
+                    patientName: "Demo Patient",
+                    type: "WARNING",
+                    painLevel: 7,
+                    symptoms: ["increased pain", "swelling"],
+                    message: "Pain level increased to 7/10",
+                    resolved: false,
+                    createdAt: serverTimestamp()
+                });
+
+                statusDiv.innerHTML = `
+                    <h3 style="color: green;">✅ Demo accounts created successfully!</h3>
+                    <p><strong>Patient:</strong> patient.demo@recoverylink.app / Patient@123</p>
+                    <p><strong>Doctor:</strong> doctor.demo@recoverylink.app / Doctor@123</p>
+                    <p><a href="login-test.html">Go back to login</a></p>
+                `;
+
+            } catch (error) {
+                console.error("Error:", error);
+                if (error.code === 'auth/email-already-in-use') {
+                    statusDiv.innerHTML = `
+                        <h3 style="color: orange;">⚠️ Demo accounts already exist!</h3>
+                        <p><strong>Patient:</strong> patient.demo@recoverylink.app / Patient@123</p>
+                        <p><strong>Doctor:</strong> doctor.demo@recoverylink.app / Doctor@123</p>
+                        <p><a href="login-test.html">Go to login</a></p>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<h3 style="color: red;">❌ Error: ${error.message}</h3>`;
+                }
+            }
+        }
+
+        // Start setup
+        createDemoAccounts();
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecoveryLink — Sign Up</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      height: 100vh;
+    }
+
+    .login-page {
+      display: flex;
+      height: 100vh;
+      background: #ECFEFF;
+    }
+
+    /* LEFT SIDE */
+    .login-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* LOGIN CARD */
+    .auth-card {
+      background: white;
+      padding: 36px;
+      width: 360px;
+      border-radius: 18px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      height: 44px;
+      background: #2563EB;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+    }
+
+    .link a {
+      color: #2563EB;
+      text-decoration: none;
+    }
+
+    /* RIGHT SIDE */
+    .login-right {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* IMAGE STYLE */
+    .login-right img {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 70%;
+      width: auto;
+      opacity: 0.95;
+      object-fit: contain;
+    }
+
+    /* MOBILE SAFE */
+    @media (max-width: 768px) {
+      .login-right {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-page">
+
+    <!-- LEFT: SIGNUP FORM -->
+    <div class="login-left">
+      <div class="auth-card">
+        <h2>Create Patient Account</h2>
+
+        <input id="name" placeholder="Full Name" />
+        <input id="email" type="email" placeholder="Email" />
+        <input id="password" type="password" placeholder="Password" />
+
+        <button id="signupBtn">Sign Up</button>
+
+        <p class="link">
+          Already have an account? <a href="login.html">Login</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- RIGHT: IMAGE -->
+    <div class="login-right">
+      <img src="Health professional team-amico.png" alt="Health Professional Team" />
+    </div>
+
+  </div>
+
+  <script type="module">
+    console.log("Signup script loaded"); // Debug log
+    
+    import { auth, db } from "./firebase.js";
+    import { createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    console.log("Firebase imports loaded"); // Debug log
+
+    document.getElementById("signupBtn").addEventListener("click", async () => {
+      console.log("Signup button clicked"); // Debug log
+      
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      console.log("Signup attempt:", { name, email }); // Debug log
+
+      if (!name || !email || !password) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters");
+        return;
+      }
+
+      try {
+        // Step 1: Create user account
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+
+        // Step 2: Send email verification
+        await sendEmailVerification(userCred.user);
+
+        // Step 3: Save patient profile
+        await setDoc(doc(db, "patients", uid), {
+          name,
+          email,
+          role: "patient",
+          createdAt: new Date()
+        });
+
+        // Step 4: Create user role document (REQUIRED for login routing)
+        await setDoc(doc(db, "users", uid), {
+          name,
+          role: "patient",
+          email,
+          createdAt: new Date()
+        });
+
+        console.log("Signup successful, verification email sent"); // Debug log
+        
+        // Sign out user until they verify email
+        await auth.signOut();
+        
+        alert("Account created! Please check your email and click the verification link before logging in.");
+        window.location.href = "login.html";
+        
+      } catch (err) {
+        console.error("Signup error:", err); // Debug log
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

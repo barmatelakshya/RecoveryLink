@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecoveryLink</title>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #E0FFFF;
+      color: #0f172a;
+    }
+
+    /* ================= NAVBAR ================= */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #eaffff;
+      border-bottom: 1px solid #dbeafe;
+    }
+
+    .nav-container {
+      height: 72px;
+      padding: 0 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .nav-logo .dot {
+      width: 10px;
+      height: 10px;
+      background: #2dd4bf;
+      border-radius: 50%;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: #334155;
+      text-decoration: none;
+    }
+
+    .nav-links a.active {
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .nav-login {
+      font-size: 14px;
+      color: #334155;
+      text-decoration: none;
+    }
+
+    .nav-cta {
+      background: #2563eb;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* ================= HERO ================= */
+    .hero {
+      min-height: calc(100vh - 72px);
+      padding: 48px 80px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      align-items: center;
+      background: linear-gradient(135deg, #eaffff 0%, #f0ffff 100%);
+      gap: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.1) 0%, transparent 70%);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-text {
+      z-index: 2;
+      position: relative;
+    }
+
+    .hero-text h1 {
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #0f172a;
+      animation: slideUpText 1s ease-out;
+    }
+
+    .hero-text p {
+      margin-top: 16px;
+      font-size: 16px;
+      color: #475569;
+      max-width: 520px;
+      animation: slideUpText 1s ease-out 0.2s both;
+    }
+
+    .primary-btn {
+      margin-top: 28px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+      transition: all 0.3s ease;
+      animation: slideUpText 1s ease-out 0.4s both;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+      position: relative;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      max-width: 520px;
+      animation: slideUpImage 1.2s ease-out 0.6s both;
+      filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
+    }
+
+    @keyframes slideUpText {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUpImage {
+      from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-20px) rotate(3deg);
+      }
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 768px) {
+      .brand {
+        padding-left: 12px;
+      }
+
+      .navbar a {
+        margin-right: 24px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 60px 24px;
+        text-align: center;
+      }
+
+      .hero-visual img {
+        margin-top: 40px;
+      }
+
+      .how-it-works {
+        padding: 80px 24px;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 80px 24px;
+      }
+
+      .section-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cta {
+        padding: 80px 24px;
+      }
+
+      .cta h2 {
+        font-size: 28px;
+      }
+
+      .footer {
+        padding: 60px 24px 32px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .cta-box {
+        padding: 40px 24px;
+      }
+
+      .cta-actions {
+        flex-direction: column;
+      }
+
+      .footer {
+        padding: 60px 24px 32px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
+    /* ================= HOW IT WORKS ================= */
+    .how-it-works {
+      padding: 100px 80px;
+      background: #ffffff;
+    }
+
+    .how-it-works h2 {
+      font-size: 34px;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .step {
+      background: #f8fafc;
+      padding: 32px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .step-number {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .step h3 {
+      margin-top: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .step p {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    /* ================= UNIVERSAL SECTIONS ================= */
+    .section {
+      padding: 100px 80px;
+      background: #ffffff;
+    }
+
+    .section-title {
+      font-size: 34px;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .section-card {
+      background: #f8fafc;
+      padding: 32px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .section-card p {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    /* ================= CTA ================= */
+    .cta {
+      padding: 120px 80px;
+      background: #ffffff;
+      text-align: center;
+    }
+
+    .cta-content {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .cta h2 {
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .cta p {
+      margin-top: 14px;
+      font-size: 16px;
+      color: #475569;
+    }
+
+    .cta-btn {
+      margin-top: 36px;
+      padding: 14px 32px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    .cta-btn:hover {
+      background: #1d4ed8;
+    }
+
+    /* ================= FOOTER ================= */
+    .footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 80px 80px 40px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 60px;
+    }
+
+    .footer-brand h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .footer-brand p {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .footer-links h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+
+    .footer-links a {
+      display: block;
+      font-size: 14px;
+      color: #475569;
+      text-decoration: none;
+      margin-bottom: 10px;
+    }
+
+    .footer-links a:hover {
+      color: #2563eb;
+    }
+
+    .footer-bottom {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* ================= CTA SECTION ================= */
+    .cta-section {
+      padding: 100px 24px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: center;
+    }
+
+    .cta-box {
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 64px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+
+    .cta-box h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+
+    .cta-box p {
+      font-size: 16px;
+      color: #475569;
+      max-width: 650px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* ================= MICRO-ANIMATIONS ================= */
+    .nav-cta,
+    .btn-primary {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .nav-cta:hover,
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2);
+    }
+
+    .feature-card {
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <span class="dot"></span>
+        <span>RecoveryLink</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#platform">Platform</a>
+        <a href="#users">Who Uses</a>
+        <a href="#security">Security</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="login.html" class="nav-login">Login</a>
+        <a href="login.html" class="nav-cta get-started-btn">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>
+        Closing the gap between hospital
+        discharge and full recovery
+      </h1>
+
+      <p>
+        Monitor patients after discharge, track symptoms,
+        and prevent avoidable readmissions through
+        continuous digital care.
+      </p>
+
+      <button class="primary-btn get-started-btn">Get Started</button>
+    </div>
+
+    <div class="hero-visual">
+      <img src="images/doctors.png" alt="Digital healthcare monitoring" 
+           onerror="this.src='images/healthcare-hero.svg'"
+           style="width: 100%; max-width: 520px;">
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
+    <h2>How RecoveryLink Works</h2>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-number">01</span>
+        <h3>Patient Daily Check-In</h3>
+        <p>
+          Patients log symptoms, pain levels, and basic health data
+          after hospital discharge.
+        </p>
+      </div>
+
+      <div class="step">
+        <span class="step-number">02</span>
+        <h3>Continuous Monitoring</h3>
+        <p>
+          Data is securely monitored to track recovery progress
+          and detect early warning signs.
+        </p>
+      </div>
+
+      <div class="step">
+        <span class="step-number">03</span>
+        <h3>Doctor Intervention</h3>
+        <p>
+          Clinicians receive alerts and intervene early to prevent
+          complications or readmissions.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM FEATURES -->
+  <section id="platform" class="section">
+    <h2 class="section-title">Platform Features</h2>
+
+    <div class="section-grid">
+      <div class="section-card">
+        <h3>Daily Health Tracking</h3>
+        <p>Patients log symptoms, pain levels, and recovery status.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Smart Alerts</h3>
+        <p>Automated alerts notify clinicians of abnormal recovery patterns.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Doctor Dashboard</h3>
+        <p>Centralized view of patient recovery and intervention needs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY & COMPLIANCE -->
+  <section id="security" class="section">
+    <h2 class="section-title">Security & Compliance</h2>
+
+    <div class="section-grid">
+      <div class="section-card">
+        <h3>Data Encryption</h3>
+        <p>All patient data is encrypted at rest and in transit.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Access Control</h3>
+        <p>Role-based access ensures only authorized users see data.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Healthcare Standards</h3>
+        <p>Designed to align with hospital-grade data protection practices.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO USES RECOVERYLINK -->
+  <section id="users" class="section">
+    <h2 class="section-title">Who Uses RecoveryLink</h2>
+
+    <div class="section-grid">
+      <div class="section-card">
+        <h3>Hospitals</h3>
+        <p>Reduce readmissions and improve post-discharge outcomes.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Doctors & Clinicians</h3>
+        <p>Monitor patient recovery without manual follow-ups.</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Patients</h3>
+        <p>Receive structured guidance and continuous care after discharge.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <section class="cta-section">
+    <div class="cta-box">
+      <h2>Start improving post-discharge care today</h2>
+      <p>
+        RecoveryLink helps hospitals reduce readmissions, monitor recovery,
+        and intervene early with confidence.
+      </p>
+
+      <div class="cta-actions">
+        <a href="login.html" class="btn-primary get-started-btn">Get Started</a>
+        <a href="#" class="btn-secondary">Request Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>RecoveryLink</h3>
+        <p>
+          Closing the gap between hospital discharge and full recovery through
+          continuous digital care.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="#">Features</a>
+        <a href="#">Platform</a>
+        <a href="#">Security</a>
+      </div>
+
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        <a href="#">Careers</a>
+      </div>
+
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2025 RecoveryLink. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="js/landing.js"></script>
+
+</body>
+</html>

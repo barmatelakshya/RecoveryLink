@@ -1,0 +1,27 @@
+<svg width="520" height="400" viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#50BFC3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a9ca0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="520" height="400" fill="url(#bg)" rx="12"/>
+  
+  <!-- Doctor figure -->
+  <circle cx="260" cy="150" r="40" fill="white" opacity="0.9"/>
+  <rect x="230" y="190" width="60" height="80" fill="white" opacity="0.9" rx="8"/>
+  
+  <!-- Medical cross -->
+  <rect x="250" y="120" width="20" height="60" fill="#50BFC3"/>
+  <rect x="230" y="140" width="60" height="20" fill="#50BFC3"/>
+  
+  <!-- Text -->
+  <text x="260" y="320" text-anchor="middle" fill="white" font-family="Arial" font-size="24" font-weight="bold">
+    Healthcare Monitoring
+  </text>
+  <text x="260" y="350" text-anchor="middle" fill="white" font-family="Arial" font-size="16" opacity="0.8">
+    Post-Discharge Care System
+  </text>
+</svg>

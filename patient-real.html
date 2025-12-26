@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-tabs {
+            background: white;
+            display: flex;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: #50BFC3;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #50BFC3;
+        }
+
+        .pain-scale {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .pain-btn {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .pain-btn.selected {
+            background: #50BFC3;
+            color: white;
+            border-color: #50BFC3;
+        }
+
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .symptom-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .symptom-checkbox.selected {
+            background: #f0f9ff;
+            border-color: #50BFC3;
+        }
+
+        .symptom-checkbox input {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #50BFC3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a9ca0;
+        }
+
+        .btn:disabled {
+            background: #28a745;
+            cursor: not-allowed;
+        }
+
+        .history-card {
+            background: #f8f9fa;
+            border-left: 4px solid #50BFC3;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .history-card b {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .history-card p {
+            margin: 4px 0;
+            color: #6c757d;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .empty {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome">
+            Welcome back, <span id="patientName">Loading...</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('checkin')">📝 Check-in</button>
+        <button class="tab-btn" onclick="showTab('history')">📊 History</button>
+        <button class="tab-btn" onclick="showTab('profile')">👤 Profile</button>
+    </div>
+
+    <div class="container">
+        <!-- CHECK-IN SECTION -->
+        <section id="checkin-section" class="page-section active">
+            <h2>Daily Health Check-in</h2>
+            
+            <div class="success-msg" id="checkinSuccess">
+                ✅ Vitals logged successfully! Next check-in tomorrow.
+            </div>
+
+            <form id="checkinForm">
+                <div class="form-group">
+                    <label>Pain Level (1 = No pain, 10 = Severe pain)</label>
+                    <div class="pain-scale" id="painScale"></div>
+                    <input type="hidden" id="painLevel" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Symptoms</label>
+                    <div class="symptoms-grid">
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'fever')">
+                            <input type="checkbox" value="fever"> 🌡️ Fever
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'nausea')">
+                            <input type="checkbox" value="nausea"> 🤢 Nausea
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'dizziness')">
+                            <input type="checkbox" value="dizziness"> 😵 Dizziness
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'swelling')">
+                            <input type="checkbox" value="swelling"> 🔴 Swelling
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Any concerns..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">Log Vitals</button>
+            </form>
+        </section>
+
+        <!-- HISTORY SECTION -->
+        <section id="history-section" class="page-section">
+            <h2>📊 Health History</h2>
+            <div id="historyList">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION -->
+        <section id="profile-section" class="page-section">
+            <h2>👤 My Profile</h2>
+            
+            <div class="success-msg" id="profileSuccess">
+                ✅ Profile updated successfully!
+            </div>
+
+            <div class="form-group">
+                <label for="nameInput">Full Name</label>
+                <input type="text" id="nameInput" placeholder="Enter your name">
+            </div>
+
+            <div class="form-group">
+                <label for="ageInput">Age</label>
+                <input type="number" id="ageInput" placeholder="Enter your age">
+            </div>
+
+            <div class="form-group">
+                <label for="conditionInput">Medical Condition</label>
+                <input type="text" id="conditionInput" placeholder="e.g., Post-surgery recovery">
+            </div>
+
+            <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+        </section>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { db, auth } from './firebase.js';
+        import { 
+            collection, 
+            addDoc, 
+            doc,
+            getDoc,
+            setDoc,
+            query,
+            where,
+            orderBy,
+            onSnapshot,
+            serverTimestamp,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        let selectedPain = null;
+        let selectedSymptoms = [];
+        let currentUser = null;
+
+        // Auth State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserProfile();
+                loadHistory();
+                checkDailyLimit();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Tab Navigation
+        window.showTab = function(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-section').classList.add('active');
+        };
+
+        // Generate Pain Scale
+        function generatePainScale() {
+            const painScale = document.getElementById('painScale');
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pain-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectPain(i);
+                painScale.appendChild(btn);
+            }
+        }
+
+        window.selectPain = function(level) {
+            selectedPain = level;
+            document.getElementById('painLevel').value = level;
+            
+            document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        };
+
+        window.toggleSymptom = function(element, symptom) {
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+                selectedSymptoms.push(symptom);
+            } else {
+                element.classList.remove('selected');
+                selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            }
+        };
+
+        // CORE: Check-in Submission
+        document.getElementById('checkinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedPain) {
+                showToast('Please select your pain level', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const today = new Date().toDateString();
+            const lastCheckin = localStorage.getItem(`lastCheckin_${currentUser.uid}`);
+
+            if (lastCheckin === today) {
+                showToast('Already submitted today', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const notes = document.getElementById('notes').value;
+
+                // 1. Save check-in to Firestore
+                await addDoc(collection(db, 'checkins'), {
+                    patientId: currentUser.uid,
+                    painLevel: selectedPain,
+                    symptoms: selectedSymptoms,
+                    notes: notes,
+                    createdAt: serverTimestamp()
+                });
+
+                // 2. Auto-generate alert if needed
+                if (selectedPain >= 7) {
+                    await addDoc(collection(db, 'alerts'), {
+                        patientId: currentUser.uid,
+                        painLevel: selectedPain,
+                        status: selectedPain >= 8 ? 'critical' : 'warning',
+                        createdAt: serverTimestamp(),
+                        seen: false
+                    });
+                }
+
+                // 3. Success state
+                localStorage.setItem(`lastCheckin_${currentUser.uid}`, today);
+                document.getElementById('checkinSuccess').style.display = 'block';
+                document.getElementById('checkinForm').reset();
+                
+                selectedPain = null;
+                selectedSymptoms = [];
+                document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+                document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.classList.remove('selected'));
+
+                submitBtn.textContent = 'Vitals Logged ✔';
+                showToast('Vitals logged successfully!', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('checkinSuccess').style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error saving vitals. Try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log Vitals';
+            }
+        });
+
+        // Load User Profile
+        async function loadUserProfile() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    document.getElementById('patientName').textContent = userData.name || 'Patient';
+                    document.getElementById('nameInput').value = userData.name || '';
+                    document.getElementById('ageInput').value = userData.age || '';
+                    document.getElementById('conditionInput').value = userData.condition || '';
+                } else {
+                    document.getElementById('patientName').textContent = 'Patient';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Load Health History
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            
+            const q = query(
+                collection(db, 'checkins'),
+                where('patientId', '==', currentUser.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            onSnapshot(q, snapshot => {
+                historyList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    historyList.innerHTML = '<div class="empty">No check-ins yet. Submit your first one!</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.createdAt?.toDate() || new Date();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'history-card';
+                    card.innerHTML = `
+                        <b>${date.toDateString()}</b>
+                        <p><strong>Pain:</strong> ${data.painLevel}/10</p>
+                        <p><strong>Symptoms:</strong> ${(data.symptoms || []).join(', ') || 'None'}</p>
+                        ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                    `;
+                    historyList.appendChild(card);
+                });
+            });
+        }
+
+        // Save Profile
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            try {
+                await setDoc(doc(db, 'users', currentUser.uid), {
+                    name: document.getElementById('nameInput').value,
+                    age: document.getElementById('ageInput').value,
+                    condition: document.getElementById('conditionInput').value,
+                    role: 'patient',
+                    email: currentUser.email,
+                    createdAt: serverTimestamp()
+                }, { merge: true });
+
+                document.getElementById('profileSuccess').style.display = 'block';
+                document.getElementById('patientName').textContent = document.getElementById('nameInput').value || 'Patient';
+                showToast('Profile updated!', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                showToast('Error saving profile', 'error');
+            }
+        });
+
+        // Check Daily Limit
+        function checkDailyLimit() {
+            const today = new Date().toDateString();
+            const lastCheckin = localStorage.getItem(`lastCheckin_${currentUser.uid}`);
+            
+            if (lastCheckin === today) {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Vitals Logged ✔';
+            }
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Logout
+        window.logout = function() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generatePainScale();
+        });
+    </script>
+</body>
+</html>
