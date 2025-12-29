@@ -5,424 +5,384 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor Dashboard - RecoveryLink</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            display: flex;
-            height: 100vh;
-        }
-
-        .sidebar {
-            width: 250px;
-            background: white;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            padding: 20px 0;
-        }
-
-        .nav-btn {
-            width: 100%;
-            padding: 15px 25px;
-            border: none;
-            background: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-
-        .nav-btn:hover {
             background: #f8f9fa;
+            min-height: 100vh;
         }
-
-        .nav-btn.active {
-            background: #50BFC3;
-            color: white;
-            border-left: 4px solid #3a9ca0;
-        }
-
-        .nav-btn.logout {
-            color: #dc3545;
-            margin-top: 20px;
-        }
-
-        .content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        .alert-card {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .chat-item {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .chat-item:hover {
-            transform: translateY(-2px);
-        }
-
-        .chat-item b {
-            color: #2c3e50;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .chat-item p {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-
-        .settings-group {
+        .header {
             background: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .settings-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .settings-group input {
-            width: 100px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .dashboard-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .dashboard-card h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        .patient-list {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .patient-row {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
         }
-
-        .patient-row:last-child {
-            border-bottom: none;
-        }
-
-        .patient-name {
-            font-weight: 600;
+        .welcome {
+            font-size: 24px;
             color: #2c3e50;
         }
-
-        .pain-level {
-            padding: 4px 8px;
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .card {
+            background: white;
             border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .alert-card {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .alert-card.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+        }
+        .alert-card.critical {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .patient-table th,
+        .patient-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .patient-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .pain-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: 600;
         }
-
         .pain-low { background: #d4edda; color: #155724; }
         .pain-medium { background: #fff3cd; color: #856404; }
         .pain-high { background: #f8d7da; color: #721c24; }
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
-        <button class="nav-btn" data-page="alerts">🚨 Alerts</button>
-        <button class="nav-btn" data-page="messages">💬 Messages</button>
-        <button class="nav-btn" data-page="settings">⚙️ Settings</button>
-        <button class="nav-btn logout">🚪 Logout</button>
+    <div class="header">
+        <div class="welcome">
+            <span id="greetingText">Good Morning</span>, <span id="doctorName">Doctor</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <div class="content">
-        <section id="dashboard" class="page active">
-            <h2>Doctor Command Center</h2>
-            
-            <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <h3>📈 Today's Overview</h3>
-                    <p><strong>Total Patients:</strong> <span id="totalPatients">0</span></p>
-                    <p><strong>Critical Alerts:</strong> <span id="criticalAlerts">0</span></p>
-                    <p><strong>New Messages:</strong> <span id="newMessages">0</span></p>
-                </div>
-                
-                <div class="dashboard-card">
-                    <h3>⚡ Quick Actions</h3>
-                    <button onclick="refreshData()" style="padding: 8px 16px; margin: 5px; border: none; background: #50BFC3; color: white; border-radius: 4px; cursor: pointer;">Refresh Data</button>
-                    <button onclick="exportReport()" style="padding: 8px 16px; margin: 5px; border: none; background: #6c757d; color: white; border-radius: 4px; cursor: pointer;">Export Report</button>
-                </div>
+    <div class="container">
+        <!-- STATS -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPatients">0</div>
+                <div class="stat-label">Total Patients</div>
             </div>
-
-            <div class="patient-list">
-                <div class="patient-row" style="background: #f8f9fa; font-weight: 600;">
-                    <span>Patient Name</span>
-                    <span>Pain Level</span>
-                    <span>Last Check-in</span>
-                </div>
-                <div id="patientsList"></div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeAlerts">0</div>
+                <div class="stat-label">Active Alerts</div>
             </div>
-        </section>
-
-        <section id="alerts" class="page">
-            <h2>🚨 Critical Alerts</h2>
-            <div id="alertsList"></div>
-        </section>
-
-        <section id="messages" class="page">
-            <h2>💬 Patient Messages</h2>
-            <div id="chatList"></div>
-        </section>
-
-        <section id="settings" class="page">
-            <h2>⚙️ Settings</h2>
-            
-            <div class="settings-group">
-                <label>
-                    Alert Threshold (Pain Level)
-                    <input type="number" id="alertThreshold" value="7" min="1" max="10">
-                </label>
-                <small style="color: #6c757d;">Patients with pain level at or above this value will trigger alerts</small>
+            <div class="stat-card">
+                <div class="stat-number" id="todayCheckins">0</div>
+                <div class="stat-label">Today's Check-ins</div>
             </div>
+        </div>
 
-            <div class="settings-group">
-                <label>
-                    Auto-refresh Interval (seconds)
-                    <input type="number" id="refreshInterval" value="30" min="10" max="300">
-                </label>
-                <small style="color: #6c757d;">How often to check for new patient data</small>
+        <!-- ALERTS -->
+        <div class="card">
+            <h2>🚨 Active Alerts</h2>
+            <div id="alertsList">
+                <div class="empty-state">Loading alerts...</div>
             </div>
-        </section>
+        </div>
+
+        <!-- RECENT CHECK-INS -->
+        <div class="card">
+            <h2>📊 Recent Check-ins</h2>
+            <table class="patient-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Pain Level</th>
+                        <th>Symptoms</th>
+                        <th>Time</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="checkinsTable">
+                    <tr>
+                        <td colspan="5" class="empty-state">Loading check-ins...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <script>
-        // Sample patient data (simulate backend)
-        const patients = JSON.parse(localStorage.getItem("patients")) || [
-            { name: "Rahul Sharma", pain: 8, lastCheckin: "2 hours ago" },
-            { name: "Amit Patel", pain: 4, lastCheckin: "1 hour ago" },
-            { name: "Priya Singh", pain: 9, lastCheckin: "30 minutes ago" },
-            { name: "Vikram Kumar", pain: 3, lastCheckin: "4 hours ago" },
-            { name: "Sneha Gupta", pain: 7, lastCheckin: "1 hour ago" }
-        ];
+    <script type="module">
+        // BULLETPROOF FIREBASE IMPORTS
+        import { auth, db } from './firebase.js';
+        import { 
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { 
+            doc,
+            getDoc,
+            collection,
+            query,
+            orderBy,
+            limit,
+            where,
+            onSnapshot,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // Mock chat data
-        const chats = [
-            { patient: "Rahul Sharma", last: "Pain increased today, feeling dizzy" },
-            { patient: "Priya Singh", last: "Severe pain in surgical area" },
-            { patient: "Amit Patel", last: "Feeling much better, thank you" },
-            { patient: "Sneha Gupta", last: "Some swelling noticed" }
-        ];
+        console.log("✅ Doctor dashboard JS loaded");
 
-        // Navigation Logic
-        const buttons = document.querySelectorAll(".nav-btn");
-        const pages = document.querySelectorAll(".page");
+        let currentUser = null;
 
-        buttons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const page = btn.dataset.page;
+        // BULLETPROOF AUTH STATE
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
 
-                // Logout
-                if (btn.classList.contains("logout")) {
-                    localStorage.clear();
-                    window.location.href = "login.html";
+            // ROLE VALIDATION
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (!userDoc.exists() || userDoc.data().role !== 'doctor') {
+                    console.warn("Access denied: not a doctor");
+                    await signOut(auth);
+                    window.location.href = 'login.html';
                     return;
                 }
+            } catch (error) {
+                console.error("Role validation failed:", error);
+                window.location.href = 'login.html';
+                return;
+            }
 
-                // Active button
-                buttons.forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-
-                // Show page
-                pages.forEach(p => p.classList.remove("active"));
-                document.getElementById(page).classList.add("active");
-            });
+            currentUser = user;
+            
+            // IMMEDIATE UI UPDATE
+            setTimeBasedGreeting();
+            document.getElementById('doctorName').textContent = 'Doctor';
+            
+            // LOAD DATA (non-blocking)
+            await loadDoctorProfile();
+            setupRealtimeListeners();
         });
 
-        // Load Dashboard Data
-        function loadDashboard() {
-            const patientsList = document.getElementById("patientsList");
-            const totalPatients = document.getElementById("totalPatients");
-            const criticalAlerts = document.getElementById("criticalAlerts");
-            
-            patientsList.innerHTML = "";
-            let criticalCount = 0;
-
-            patients.forEach(p => {
-                if (p.pain >= 7) criticalCount++;
-                
-                const row = document.createElement("div");
-                row.className = "patient-row";
-                
-                let painClass = "pain-low";
-                if (p.pain >= 7) painClass = "pain-high";
-                else if (p.pain >= 5) painClass = "pain-medium";
-                
-                row.innerHTML = `
-                    <span class="patient-name">${p.name}</span>
-                    <span class="pain-level ${painClass}">${p.pain}/10</span>
-                    <span>${p.lastCheckin}</span>
-                `;
-                patientsList.appendChild(row);
-            });
-
-            totalPatients.textContent = patients.length;
-            criticalAlerts.textContent = criticalCount;
-            document.getElementById("newMessages").textContent = chats.length;
+        // TIME-BASED GREETING
+        function setTimeBasedGreeting() {
+            const hour = new Date().getHours();
+            let greetingText = "Good Morning";
+            if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+            if (hour >= 17) greetingText = "Good Evening";
+            document.getElementById('greetingText').textContent = greetingText;
         }
 
-        // Load Alerts
-        function loadAlerts() {
-            const alertsList = document.getElementById("alertsList");
-            const threshold = parseInt(localStorage.getItem("alertThreshold")) || 7;
-            
-            alertsList.innerHTML = "";
-
-            patients.forEach(p => {
-                if (p.pain >= threshold) {
-                    const alert = document.createElement("div");
-                    alert.innerHTML = `
-                        <div class="alert-card">
-                            🚨 <b>${p.name}</b> - Pain level ${p.pain}/10 (CRITICAL)
-                            <br><small>Last check-in: ${p.lastCheckin}</small>
-                        </div>
-                    `;
-                    alertsList.appendChild(alert);
+        // LOAD DOCTOR PROFILE
+        async function loadDoctorProfile() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    if (userData.name) {
+                        document.getElementById('doctorName').textContent = userData.name;
+                    }
                 }
-            });
-
-            if (alertsList.children.length === 0) {
-                alertsList.innerHTML = '<p style="color: #28a745; font-weight: 600;">✅ No critical alerts at this time</p>';
+            } catch (error) {
+                console.error('Profile load failed:', error);
             }
         }
 
-        // Load Messages
-        function loadMessages() {
-            const chatList = document.getElementById("chatList");
-            chatList.innerHTML = "";
+        // SETUP REAL-TIME LISTENERS
+        function setupRealtimeListeners() {
+            // LISTEN TO ALERTS
+            const alertsQuery = query(
+                collection(db, 'alerts'),
+                where('seen', '==', false),
+                orderBy('createdAt', 'desc'),
+                limit(10)
+            );
 
-            chats.forEach(c => {
-                const div = document.createElement("div");
-                div.className = "chat-item";
-                div.innerHTML = `
-                    <b>${c.patient}</b>
-                    <p>${c.last}</p>
-                `;
-                div.onclick = () => alert(`Opening chat with ${c.patient}`);
-                chatList.appendChild(div);
+            onSnapshot(alertsQuery, (snapshot) => {
+                updateAlertsUI(snapshot.docs);
+                document.getElementById('activeAlerts').textContent = snapshot.size;
+            });
+
+            // LISTEN TO RECENT CHECK-INS
+            const checkinsQuery = query(
+                collection(db, 'checkins'),
+                orderBy('createdAt', 'desc'),
+                limit(20)
+            );
+
+            onSnapshot(checkinsQuery, async (snapshot) => {
+                await updateCheckinsUI(snapshot.docs);
+                
+                // COUNT TODAY'S CHECK-INS
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayCount = snapshot.docs.filter(doc => {
+                    const checkinDate = doc.data().createdAt?.toDate();
+                    return checkinDate && checkinDate >= today;
+                }).length;
+                
+                document.getElementById('todayCheckins').textContent = todayCount;
+            });
+
+            // COUNT TOTAL PATIENTS
+            const usersQuery = query(
+                collection(db, 'users'),
+                where('role', '==', 'patient')
+            );
+
+            onSnapshot(usersQuery, (snapshot) => {
+                document.getElementById('totalPatients').textContent = snapshot.size;
             });
         }
 
-        // Settings
-        document.getElementById("alertThreshold").addEventListener("change", e => {
-            localStorage.setItem("alertThreshold", e.target.value);
-            loadAlerts(); // Refresh alerts with new threshold
-        });
-
-        document.getElementById("refreshInterval").addEventListener("change", e => {
-            localStorage.setItem("refreshInterval", e.target.value);
-        });
-
-        // Load saved settings
-        document.getElementById("alertThreshold").value = localStorage.getItem("alertThreshold") || 7;
-        document.getElementById("refreshInterval").value = localStorage.getItem("refreshInterval") || 30;
-
-        // Utility functions
-        function refreshData() {
-            loadDashboard();
-            loadAlerts();
-            loadMessages();
-            alert("Data refreshed successfully!");
-        }
-
-        function exportReport() {
-            const report = {
-                timestamp: new Date().toISOString(),
-                totalPatients: patients.length,
-                criticalAlerts: patients.filter(p => p.pain >= 7).length,
-                patients: patients
-            };
+        // UPDATE ALERTS UI
+        function updateAlertsUI(alertDocs) {
+            const alertsList = document.getElementById('alertsList');
             
-            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `patient-report-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
+            if (alertDocs.length === 0) {
+                alertsList.innerHTML = '<div class="empty-state">No active alerts</div>';
+                return;
+            }
+
+            alertsList.innerHTML = alertDocs.map(doc => {
+                const alert = doc.data();
+                const alertClass = alert.level === 'CRITICAL' ? 'critical' : 'warning';
+                const time = alert.createdAt?.toDate()?.toLocaleTimeString() || 'Unknown time';
+                
+                return `
+                    <div class="alert-card ${alertClass}" onclick="markAlertSeen('${doc.id}')">
+                        <strong>${alert.level}:</strong> ${alert.message}
+                        <br><small>Time: ${time}</small>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // Initialize on page load
-        document.addEventListener("DOMContentLoaded", () => {
-            loadDashboard();
-            loadAlerts();
-            loadMessages();
-        });
-
-        // Auto-refresh (optional)
-        setInterval(() => {
-            const interval = parseInt(localStorage.getItem("refreshInterval")) || 30;
-            if (interval > 0) {
-                loadDashboard();
-                loadAlerts();
+        // UPDATE CHECK-INS UI
+        async function updateCheckinsUI(checkinDocs) {
+            const checkinsTable = document.getElementById('checkinsTable');
+            
+            if (checkinDocs.length === 0) {
+                checkinsTable.innerHTML = '<tr><td colspan="5" class="empty-state">No check-ins yet</td></tr>';
+                return;
             }
-        }, 30000); // 30 seconds default
+
+            // GET PATIENT NAMES
+            const patientNames = {};
+            for (const doc of checkinDocs) {
+                const patientId = doc.data().patientId;
+                if (!patientNames[patientId]) {
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', patientId));
+                        patientNames[patientId] = userDoc.exists() ? userDoc.data().name || 'Unknown Patient' : 'Unknown Patient';
+                    } catch (error) {
+                        patientNames[patientId] = 'Unknown Patient';
+                    }
+                }
+            }
+
+            checkinsTable.innerHTML = checkinDocs.map(doc => {
+                const checkin = doc.data();
+                const patientName = patientNames[checkin.patientId] || 'Unknown Patient';
+                const time = checkin.createdAt?.toDate()?.toLocaleString() || 'Unknown time';
+                const symptoms = Array.isArray(checkin.symptoms) ? checkin.symptoms.join(', ') : (checkin.symptoms || 'None');
+                
+                let painClass = 'pain-low';
+                if (checkin.pain >= 4 && checkin.pain <= 6) painClass = 'pain-medium';
+                if (checkin.pain >= 7) painClass = 'pain-high';
+                
+                return `
+                    <tr>
+                        <td>${patientName}</td>
+                        <td><span class="pain-badge ${painClass}">${checkin.pain}/10</span></td>
+                        <td>${symptoms}</td>
+                        <td>${time}</td>
+                        <td>${checkin.notes || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // MARK ALERT AS SEEN
+        window.markAlertSeen = async function(alertId) {
+            try {
+                await updateDoc(doc(db, 'alerts', alertId), {
+                    seen: true,
+                    seenAt: new Date()
+                });
+            } catch (error) {
+                console.error('Failed to mark alert as seen:', error);
+            }
+        };
+
+        // LOGOUT
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        };
     </script>
 </body>
 </html>

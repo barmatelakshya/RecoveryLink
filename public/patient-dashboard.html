@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .welcome {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #50BFC3;
+            color: white;
+        }
+        .btn:hover {
+            background: #3a9ca0;
+        }
+        .pain-scale {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .pain-btn {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .pain-btn.selected {
+            background: #50BFC3;
+            color: white;
+            border-color: #50BFC3;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome">
+            <span id="greetingText">Good Morning</span>, <span id="patientName">Patient</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="container">
+        <!-- PROFILE CARD -->
+        <div class="card">
+            <h2>👤 My Profile</h2>
+            <div class="success" id="profileSuccess">✅ Profile updated successfully!</div>
+            
+            <div class="form-group">
+                <label for="nameInput">Full Name</label>
+                <input type="text" id="nameInput" placeholder="Enter your name">
+            </div>
+            
+            <div class="form-group">
+                <label for="ageInput">Age</label>
+                <input type="number" id="ageInput" placeholder="Enter your age">
+            </div>
+            
+            <div class="form-group">
+                <label for="conditionInput">Medical Condition</label>
+                <input type="text" id="conditionInput" placeholder="e.g., Post-surgery recovery">
+            </div>
+            
+            <button class="btn" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <!-- CHECK-IN CARD -->
+        <div class="card">
+            <h2>📝 Daily Check-in</h2>
+            <div class="success" id="checkinSuccess">✅ Check-in submitted successfully!</div>
+            
+            <div class="form-group">
+                <label>Pain Level (1 = No pain, 10 = Severe pain)</label>
+                <div class="pain-scale" id="painScale"></div>
+                <input type="hidden" id="painLevel" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="symptoms">Symptoms</label>
+                <input type="text" id="symptoms" placeholder="e.g., Fever, Nausea">
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" rows="3" placeholder="Any concerns..."></textarea>
+            </div>
+            
+            <button class="btn" onclick="submitCheckin()">Submit Check-in</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // BULLETPROOF FIREBASE IMPORTS
+        import { auth, db } from './firebase.js';
+        import { 
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { 
+            doc,
+            getDoc,
+            setDoc,
+            addDoc,
+            collection,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        console.log("✅ Patient dashboard JS loaded");
+
+        let currentUser = null;
+        let selectedPain = null;
+
+        // BULLETPROOF AUTH STATE
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = user;
+            
+            // IMMEDIATE UI UPDATE (no loading dependencies)
+            setTimeBasedGreeting();
+            document.getElementById('patientName').textContent = 'Patient';
+            
+            // ENHANCE UI WITH DATA (non-blocking)
+            await loadUserProfile();
+            generatePainScale();
+        });
+
+        // TIME-BASED GREETING (no dependencies)
+        function setTimeBasedGreeting() {
+            const hour = new Date().getHours();
+            let greetingText = "Good Morning";
+            if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+            if (hour >= 17) greetingText = "Good Evening";
+            document.getElementById('greetingText').textContent = greetingText;
+        }
+
+        // LOAD USER PROFILE (with fallbacks)
+        async function loadUserProfile() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    // VALIDATE REQUIRED FIELDS
+                    if (userData.name) {
+                        document.getElementById('patientName').textContent = userData.name;
+                        document.getElementById('nameInput').value = userData.name;
+                    }
+                    if (userData.age) document.getElementById('ageInput').value = userData.age;
+                    if (userData.condition) document.getElementById('conditionInput').value = userData.condition;
+                } else {
+                    console.warn("User document missing - creating default");
+                    await createDefaultUserProfile();
+                }
+            } catch (error) {
+                console.error('Profile load failed:', error);
+                // UI already shows fallback "Patient"
+            }
+        }
+
+        // CREATE DEFAULT PROFILE (if missing)
+        async function createDefaultUserProfile() {
+            try {
+                await setDoc(doc(db, 'users', currentUser.uid), {
+                    name: '',
+                    email: currentUser.email,
+                    role: 'patient',
+                    age: '',
+                    condition: '',
+                    createdAt: serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Failed to create default profile:', error);
+            }
+        }
+
+        // GENERATE PAIN SCALE
+        function generatePainScale() {
+            const painScale = document.getElementById('painScale');
+            painScale.innerHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pain-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectPain(i);
+                painScale.appendChild(btn);
+            }
+        }
+
+        // SELECT PAIN LEVEL
+        window.selectPain = function(level) {
+            selectedPain = level;
+            document.getElementById('painLevel').value = level;
+            
+            document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        };
+
+        // SAVE PROFILE
+        window.saveProfile = async function() {
+            try {
+                const profileData = {
+                    name: document.getElementById('nameInput').value,
+                    age: document.getElementById('ageInput').value,
+                    condition: document.getElementById('conditionInput').value,
+                    email: currentUser.email,
+                    role: 'patient',
+                    updatedAt: serverTimestamp()
+                };
+
+                await setDoc(doc(db, 'users', currentUser.uid), profileData, { merge: true });
+                
+                // UPDATE UI IMMEDIATELY
+                if (profileData.name) {
+                    document.getElementById('patientName').textContent = profileData.name;
+                }
+                
+                showSuccess('profileSuccess');
+            } catch (error) {
+                console.error('Profile save failed:', error);
+                alert('Failed to save profile. Please try again.');
+            }
+        };
+
+        // SUBMIT CHECK-IN
+        window.submitCheckin = async function() {
+            if (!selectedPain) {
+                alert('Please select your pain level');
+                return;
+            }
+
+            try {
+                const checkinData = {
+                    patientId: currentUser.uid,
+                    pain: selectedPain,
+                    symptoms: document.getElementById('symptoms').value.split(',').map(s => s.trim()).filter(s => s),
+                    notes: document.getElementById('notes').value,
+                    createdAt: serverTimestamp()
+                };
+
+                await addDoc(collection(db, 'checkins'), checkinData);
+
+                // AUTO-GENERATE ALERT IF HIGH PAIN
+                if (selectedPain >= 7) {
+                    await addDoc(collection(db, 'alerts'), {
+                        patientId: currentUser.uid,
+                        level: selectedPain >= 8 ? 'CRITICAL' : 'WARNING',
+                        message: `Patient reported pain level ${selectedPain}`,
+                        pain: selectedPain,
+                        createdAt: serverTimestamp(),
+                        seen: false
+                    });
+                }
+
+                // RESET FORM
+                document.getElementById('symptoms').value = '';
+                document.getElementById('notes').value = '';
+                selectedPain = null;
+                document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+                
+                showSuccess('checkinSuccess');
+            } catch (error) {
+                console.error('Check-in failed:', error);
+                alert('Failed to submit check-in. Please try again.');
+            }
+        };
+
+        // LOGOUT
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        };
+
+        // SHOW SUCCESS MESSAGE
+        function showSuccess(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
