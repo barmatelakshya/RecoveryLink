@@ -250,7 +250,7 @@
 <body>
     <div class="header">
         <div class="welcome">
-            <span id="greeting">Good Morning</span>, <span id="patientName">Loading...</span>
+            <span id="greetingText">Good Morning</span>, <span id="patientName">Loading...</span>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
@@ -365,8 +365,21 @@
 
         // Auth State
         onAuthStateChanged(auth, (user) => {
+            console.log("Patient dashboard JS loaded"); // Debug log
+            
             if (user) {
                 currentUser = user;
+                
+                // REMOVE LOADING IMMEDIATELY
+                document.getElementById('patientName').textContent = 'Patient';
+                
+                // Set time-based greeting
+                const hour = new Date().getHours();
+                let greetingText = "Good Morning";
+                if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+                if (hour >= 17) greetingText = "Good Evening";
+                document.getElementById('greetingText').textContent = greetingText;
+                
                 loadUserProfile();
                 loadHistory();
                 checkDailyLimit();
@@ -490,13 +503,6 @@
         // Load User Profile
         async function loadUserProfile() {
             try {
-                // Set time-based greeting
-                const hour = new Date().getHours();
-                let greetingText = "Good Morning";
-                if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
-                if (hour >= 17) greetingText = "Good Evening";
-                document.getElementById('greeting').textContent = greetingText;
-
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
@@ -505,6 +511,7 @@
                     document.getElementById('ageInput').value = userData.age || '';
                     document.getElementById('conditionInput').value = userData.condition || '';
                 } else {
+                    console.warn("User document missing for:", currentUser.uid);
                     document.getElementById('patientName').textContent = 'Patient';
                 }
             } catch (error) {
