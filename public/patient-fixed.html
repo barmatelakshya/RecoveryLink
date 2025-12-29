@@ -409,15 +409,13 @@
           document.querySelector('.greeting').textContent = `${greetingText}, ${userData.name || 'Patient'}`;
           document.querySelector('.avatar').textContent = (userData.name || 'Patient').charAt(0).toUpperCase();
           
-          // Update loading states
-          setTimeout(() => {
-            document.getElementById('recoveryProgress').textContent = 'On Track';
-            document.getElementById('riskBadge').textContent = 'Low Risk';
-            document.getElementById('riskBadge').className = 'badge success';
-            document.getElementById('painTrend').textContent = 'Improving';
-            document.getElementById('lastCheckin').textContent = 'Today';
-            document.getElementById('daysTracked').textContent = '6 days';
-          }, 1000);
+          // IMMEDIATE UI UPDATE (no loading dependencies)
+          document.getElementById('recoveryProgress').textContent = 'On Track';
+          document.getElementById('riskBadge').textContent = 'Low Risk';
+          document.getElementById('riskBadge').className = 'badge success';
+          document.getElementById('painTrend').textContent = 'Improving';
+          document.getElementById('lastCheckin').textContent = 'Today';
+          document.getElementById('daysTracked').textContent = '6 days';
 
           // Setup navigation
           setupNavigation();
