@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Test - RecoveryLink</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, button { padding: 10px; font-size: 16px; }
+        button { background: #50BFC3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #28a745; }
+        .symptom { display: inline-block; padding: 8px 12px; margin: 5px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .symptom.active { background: #50BFC3; color: white; border-color: #50BFC3; }
+        #painValue { font-size: 24px; font-weight: bold; color: #50BFC3; }
+    </style>
+</head>
+<body>
+    <h1>🏥 Patient Vitals Test</h1>
+    
+    <div class="form-group">
+        <label>Pain Level: <span id="painValue">5</span>/10</label>
+        <input type="range" id="painSlider" min="1" max="10" value="5" style="width: 100%;">
+    </div>
+
+    <div class="form-group">
+        <label>Symptoms (click to select):</label>
+        <div class="symptom" onclick="toggleSymptom(this)">Fever</div>
+        <div class="symptom" onclick="toggleSymptom(this)">Nausea</div>
+        <div class="symptom" onclick="toggleSymptom(this)">Dizziness</div>
+        <div class="symptom" onclick="toggleSymptom(this)">Swelling</div>
+        <div class="symptom" onclick="toggleSymptom(this)">Bleeding</div>
+    </div>
+
+    <button id="logBtn">Log Vitals</button>
+
+    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Set pain level to 8+ to trigger critical alert</li>
+            <li>Select symptoms by clicking</li>
+            <li>Click "Log Vitals"</li>
+            <li>Check Firestore console for new documents</li>
+            <li>Open doctor dashboard to see live updates</li>
+        </ol>
+    </div>
+
+    <script>
+        // Pain slider
+        const painSlider = document.getElementById('painSlider');
+        const painValue = document.getElementById('painValue');
+        
+        painSlider.addEventListener('input', (e) => {
+            painValue.textContent = e.target.value;
+            
+            // Color coding
+            const value = parseInt(e.target.value);
+            if (value >= 8) painValue.style.color = '#dc3545';
+            else if (value >= 5) painValue.style.color = '#ffc107';
+            else painValue.style.color = '#28a745';
+        });
+
+        // Symptom selection
+        function toggleSymptom(element) {
+            element.classList.toggle('active');
+        }
+
+        // Make functions global
+        window.toggleSymptom = toggleSymptom;
+    </script>
+
+    <script type="module" src="./patient-dashboard.js"></script>
+</body>
+</html>

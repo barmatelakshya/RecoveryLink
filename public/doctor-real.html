@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px 0;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            background: #50BFC3;
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-number.critical { color: #e53e3e; }
+        .stat-number.warning { color: #d69e2e; }
+        .stat-number.stable { color: #38a169; }
+
+        .filters {
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .filter-btn.active {
+            background: #50BFC3;
+            color: white;
+        }
+
+        .patient-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+        }
+
+        .patient-row {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .patient-row:last-child { border-bottom: none; }
+
+        .patient-row.critical { background: #fff5f5; border-left: 4px solid #e53e3e; }
+        .patient-row.warning { background: #fffbeb; border-left: 4px solid #d69e2e; }
+        .patient-row.stable { background: #f0fff4; border-left: 4px solid #38a169; }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.critical { background: #fed7d7; color: #c53030; }
+        .status-badge.warning { background: #fef5e7; color: #d69e2e; }
+        .status-badge.stable { background: #c6f6d5; color: #2f855a; }
+
+        .alert-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #e53e3e;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .alert-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .alert-card.seen {
+            opacity: 0.6;
+            border-left-color: #ccc;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #50BFC3; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+        <button class="nav-btn" data-page="alerts">🚨 Alerts</button>
+        <button class="nav-btn logout">🚪 Logout</button>
+    </div>
+
+    <div class="content">
+        <section id="dashboard" class="page active">
+            <h2>Patient Monitoring Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPatients">0</div>
+                    <div>Total Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number critical" id="criticalCount">0</div>
+                    <div>Critical</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number warning" id="warningCount">0</div>
+                    <div>Warning</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stable" id="stableCount">0</div>
+                    <div>Stable</div>
+                </div>
+            </div>
+            
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterStatus('all')">All</button>
+                <button class="filter-btn" onclick="filterStatus('critical')">Critical</button>
+                <button class="filter-btn" onclick="filterStatus('warning')">Warning</button>
+                <button class="filter-btn" onclick="filterStatus('stable')">Stable</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+            </div>
+
+            <div class="patient-table">
+                <div class="table-header">
+                    <span>Patient</span>
+                    <span>Pain Level</span>
+                    <span>Last Check-in</span>
+                    <span>Status</span>
+                    <span>Actions</span>
+                </div>
+                <div id="patientTable">
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                    <div class="skeleton"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="alerts" class="page">
+            <h2>🚨 Active Alerts</h2>
+            <div id="alertsList">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './firebase.js';
+        import { 
+            collection, 
+            onSnapshot, 
+            doc,
+            updateDoc,
+            deleteDoc,
+            query,
+            orderBy,
+            where,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        let currentUser = null;
+        let patientsData = new Map();
+        let alertsData = [];
+
+        // Auth State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadPatientTable();
+                loadAlerts();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.dataset.page;
+                
+                if (btn.classList.contains('logout')) {
+                    localStorage.clear();
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(page).classList.add('active');
+            });
+        });
+
+        // CORE: Load Patient Table with Real Firestore Data
+        function loadPatientTable() {
+            const table = document.getElementById('patientTable');
+            
+            // Listen to all check-ins in real-time
+            onSnapshot(collection(db, 'checkins'), snapshot => {
+                patientsData.clear();
+                
+                // Group by patient and get latest check-in
+                snapshot.forEach(doc => {
+                    const checkin = doc.data();
+                    const patientId = checkin.patientId;
+                    
+                    if (!patientsData.has(patientId) || 
+                        checkin.createdAt?.toDate() > patientsData.get(patientId).createdAt?.toDate()) {
+                        patientsData.set(patientId, checkin);
+                    }
+                });
+
+                renderPatientTable();
+                updateStats();
+            });
+
+            // Also listen to user profiles for names
+            onSnapshot(collection(db, 'users'), snapshot => {
+                snapshot.forEach(doc => {
+                    const userData = doc.data();
+                    if (userData.role === 'patient' && patientsData.has(doc.id)) {
+                        const patientData = patientsData.get(doc.id);
+                        patientData.name = userData.name || 'Unknown Patient';
+                        patientsData.set(doc.id, patientData);
+                    }
+                });
+                renderPatientTable();
+            });
+        }
+
+        function renderPatientTable() {
+            const table = document.getElementById('patientTable');
+            table.innerHTML = '';
+            
+            if (patientsData.size === 0) {
+                table.innerHTML = '<div style="padding: 40px; text-align: center; color: #6c757d;">No patients yet</div>';
+                return;
+            }
+
+            patientsData.forEach((checkin, patientId) => {
+                const status = getPatientStatus(checkin.painLevel);
+                const lastCheckin = checkin.createdAt?.toDate().toLocaleString() || 'Unknown';
+                
+                const row = document.createElement('div');
+                row.className = `patient-row ${status}`;
+                row.innerHTML = `
+                    <span>${checkin.name || patientId}</span>
+                    <span>${checkin.painLevel}/10</span>
+                    <span>${lastCheckin}</span>
+                    <span><span class="status-badge ${status}">${status.toUpperCase()}</span></span>
+                    <span>
+                        <button class="btn btn-primary" onclick="viewPatient('${patientId}')">View</button>
+                        <button class="btn btn-danger" onclick="removePatient('${patientId}')">Remove</button>
+                    </span>
+                `;
+                table.appendChild(row);
+            });
+        }
+
+        function getPatientStatus(painLevel) {
+            if (painLevel >= 8) return 'critical';
+            if (painLevel >= 5) return 'warning';
+            return 'stable';
+        }
+
+        function updateStats() {
+            let critical = 0, warning = 0, stable = 0;
+            
+            patientsData.forEach(checkin => {
+                const status = getPatientStatus(checkin.painLevel);
+                if (status === 'critical') critical++;
+                else if (status === 'warning') warning++;
+                else stable++;
+            });
+
+            document.getElementById('totalPatients').textContent = patientsData.size;
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('warningCount').textContent = warning;
+            document.getElementById('stableCount').textContent = stable;
+        }
+
+        // CORE: Load Alerts with Real Firestore Data
+        function loadAlerts() {
+            const alertsList = document.getElementById('alertsList');
+            
+            const q = query(collection(db, 'alerts'), orderBy('createdAt', 'desc'));
+            
+            onSnapshot(q, snapshot => {
+                alertsData = [];
+                alertsList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    alertsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #28a745;">✅ No active alerts</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const alert = doc.data();
+                    alertsData.push({ id: doc.id, ...alert });
+                    
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert-card ${alert.seen ? 'seen' : ''}`;
+                    alertDiv.onclick = () => markAlertSeen(doc.id);
+                    alertDiv.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${alert.status === 'critical' ? '🔴 CRITICAL' : '🟡 WARNING'}</strong><br>
+                                Patient: ${alert.patientId}<br>
+                                Pain Level: ${alert.painLevel}/10<br>
+                                <small>${alert.createdAt?.toDate().toLocaleString()}</small>
+                            </div>
+                            <div>
+                                ${!alert.seen ? '<span style="background: #e53e3e; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">NEW</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    alertsList.appendChild(alertDiv);
+                });
+            });
+        }
+
+        // Mark Alert as Seen
+        async function markAlertSeen(alertId) {
+            try {
+                await updateDoc(doc(db, 'alerts', alertId), {
+                    seen: true
+                });
+            } catch (error) {
+                console.error('Error marking alert as seen:', error);
+            }
+        }
+
+        // Filter Functions
+        window.filterStatus = function(status) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.patient-row').forEach(row => {
+                if (status === 'all' || row.classList.contains(status)) {
+                    row.style.display = 'grid';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        };
+
+        // Remove Patient
+        window.removePatient = async function(patientId) {
+            if (confirm('Remove this patient from monitoring?')) {
+                try {
+                    // In a real system, you'd update the doctor's patient list
+                    // For now, we'll just remove from local display
+                    patientsData.delete(patientId);
+                    renderPatientTable();
+                    updateStats();
+                } catch (error) {
+                    console.error('Error removing patient:', error);
+                }
+            }
+        };
+
+        // View Patient (placeholder)
+        window.viewPatient = function(patientId) {
+            alert(`Opening detailed view for patient: ${patientId}`);
+        };
+
+        // Export CSV
+        window.exportCSV = function() {
+            let csv = 'Patient,Pain Level,Status,Last Check-in\n';
+            
+            patientsData.forEach((checkin, patientId) => {
+                const status = getPatientStatus(checkin.painLevel);
+                const lastCheckin = checkin.createdAt?.toDate().toLocaleString() || 'Unknown';
+                csv += `${checkin.name || patientId},${checkin.painLevel},${status},${lastCheckin}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `patients-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        };
+    </script>
+</body>
+</html>

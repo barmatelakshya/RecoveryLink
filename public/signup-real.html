@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #50BFC3;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .role-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .role-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .role-tab.active {
+            background: #50BFC3;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #50BFC3;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 16px;
+            background: #50BFC3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .signup-btn:hover {
+            background: #3a9ca0;
+        }
+
+        .signup-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+
+        .login-link a {
+            color: #50BFC3;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">
+            <h1>🏥 RecoveryLink</h1>
+            <p>Create Your Account</p>
+        </div>
+
+        <div class="role-tabs">
+            <button class="role-tab active" onclick="switchRole('patient')">Patient</button>
+            <button class="role-tab" onclick="switchRole('doctor')">Doctor</button>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="success-msg" id="successMsg"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required minlength="6">
+            </div>
+
+            <div class="form-group" id="conditionGroup">
+                <label for="condition">Medical Condition</label>
+                <input type="text" id="condition" placeholder="e.g., Post-surgery recovery">
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn">Create <span id="roleText">Patient</span> Account</button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="login-real.html">Login here</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './firebase.js';
+        import { 
+            createUserWithEmailAndPassword,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { 
+            doc, 
+            setDoc,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        let selectedRole = 'patient';
+
+        // Check if already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (selectedRole === 'doctor') {
+                    window.location.href = 'doctor-real.html';
+                } else {
+                    window.location.href = 'patient-real.html';
+                }
+            }
+        });
+
+        // Role switching
+        window.switchRole = function(role) {
+            selectedRole = role;
+            
+            document.querySelectorAll('.role-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('roleText').textContent = role === 'patient' ? 'Patient' : 'Doctor';
+            
+            // Show/hide condition field for patients only
+            const conditionGroup = document.getElementById('conditionGroup');
+            if (role === 'patient') {
+                conditionGroup.style.display = 'block';
+            } else {
+                conditionGroup.style.display = 'none';
+            }
+        };
+
+        // Signup form
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const condition = document.getElementById('condition').value;
+            const signupBtn = document.getElementById('signupBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating account...';
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            try {
+                // Create Firebase Auth account
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Save user profile to Firestore
+                const userData = {
+                    name: name,
+                    email: email,
+                    role: selectedRole,
+                    createdAt: serverTimestamp()
+                };
+
+                if (selectedRole === 'patient') {
+                    userData.condition = condition;
+                }
+
+                await setDoc(doc(db, 'users', user.uid), userData);
+
+                successMsg.textContent = 'Account created successfully! Redirecting...';
+                successMsg.style.display = 'block';
+
+                // Redirect based on role
+                setTimeout(() => {
+                    if (selectedRole === 'doctor') {
+                        window.location.href = 'doctor-real.html';
+                    } else {
+                        window.location.href = 'patient-real.html';
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Signup error:', error);
+                
+                let errorMessage = 'Account creation failed. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'Email already in use. Please use a different email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Password should be at least 6 characters.';
+                        break;
+                }
+                
+                errorMsg.textContent = errorMessage;
+                errorMsg.style.display = 'block';
+                
+                signupBtn.disabled = false;
+                signupBtn.innerHTML = `Create <span id="roleText">${selectedRole === 'patient' ? 'Patient' : 'Doctor'}</span> Account`;
+            }
+        });
+    </script>
+</body>
+</html>

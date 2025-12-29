@@ -274,7 +274,7 @@
     <div class="header">
         <div class="welcome">
             <span class="status-indicator status-good"></span>
-            Welcome back, <span id="patientName">Loading...</span>
+            <span id="greeting">Good Morning</span>, <span id="patientName">Loading...</span>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
@@ -611,6 +611,13 @@
         // Load Profile
         async function loadProfile() {
             try {
+                // Set time-based greeting
+                const hour = new Date().getHours();
+                let greetingText = "Good Morning";
+                if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+                if (hour >= 17) greetingText = "Good Evening";
+                document.getElementById('greeting').textContent = greetingText;
+
                 const profileRef = doc(db, 'patients', patientId);
                 const snap = await getDoc(profileRef);
                 
@@ -621,9 +628,12 @@
                     document.getElementById('conditionInput').value = data.condition || '';
                     document.getElementById('emergencyContact').value = data.emergencyContact || '';
                     document.getElementById('patientName').textContent = data.name || 'Patient';
+                } else {
+                    document.getElementById('patientName').textContent = 'Patient';
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
+                document.getElementById('patientName').textContent = 'Patient';
             }
         }
 

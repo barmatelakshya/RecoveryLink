@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Check-in - RecoveryLink</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .checkin-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #50BFC3;
+        }
+
+        .pain-scale {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .pain-btn {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .pain-btn:hover {
+            border-color: #50BFC3;
+        }
+
+        .pain-btn.selected {
+            background: #50BFC3;
+            color: white;
+            border-color: #50BFC3;
+        }
+
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .symptom-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .symptom-checkbox:hover {
+            border-color: #50BFC3;
+        }
+
+        .symptom-checkbox.selected {
+            background: #f0f9ff;
+            border-color: #50BFC3;
+        }
+
+        .symptom-checkbox input {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #50BFC3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #3a9ca0;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .patient-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkin-container">
+        <h1>🏥 Daily Check-in</h1>
+        
+        <div class="patient-info">
+            <strong>Patient:</strong> <span id="patientName">Rahul Sharma</span>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✅ Check-in submitted successfully! Your doctor has been notified.
+        </div>
+
+        <form id="checkinForm">
+            <div class="form-group">
+                <label>How is your pain level today? (1 = No pain, 10 = Severe pain)</label>
+                <div class="pain-scale" id="painScale">
+                    <!-- Pain buttons will be generated -->
+                </div>
+                <input type="hidden" id="painLevel" required>
+            </div>
+
+            <div class="form-group">
+                <label>Are you experiencing any of these symptoms?</label>
+                <div class="symptoms-grid">
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'fever')">
+                        <input type="checkbox" value="fever"> 🌡️ Fever
+                    </div>
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'nausea')">
+                        <input type="checkbox" value="nausea"> 🤢 Nausea
+                    </div>
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'dizziness')">
+                        <input type="checkbox" value="dizziness"> 😵 Dizziness
+                    </div>
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'swelling')">
+                        <input type="checkbox" value="swelling"> 🔴 Swelling
+                    </div>
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'bleeding')">
+                        <input type="checkbox" value="bleeding"> 🩸 Bleeding
+                    </div>
+                    <div class="symptom-checkbox" onclick="toggleSymptom(this, 'shortness_of_breath')">
+                        <input type="checkbox" value="shortness_of_breath"> 🫁 Shortness of Breath
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Additional Notes (Optional)</label>
+                <input type="text" id="notes" placeholder="Any other concerns or observations...">
+            </div>
+
+            <button type="submit" class="submit-btn">Submit Check-in</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase.js';
+        import { 
+            collection, 
+            addDoc, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        let selectedPain = null;
+        let selectedSymptoms = [];
+
+        // Generate pain scale buttons
+        function generatePainScale() {
+            const painScale = document.getElementById('painScale');
+            
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pain-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectPain(i);
+                painScale.appendChild(btn);
+            }
+        }
+
+        // Select pain level
+        window.selectPain = function(level) {
+            selectedPain = level;
+            document.getElementById('painLevel').value = level;
+            
+            document.querySelectorAll('.pain-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            event.target.classList.add('selected');
+        };
+
+        // Toggle symptom selection
+        window.toggleSymptom = function(element, symptom) {
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+                selectedSymptoms.push(symptom);
+            } else {
+                element.classList.remove('selected');
+                selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            }
+        };
+
+        // Submit check-in
+        document.getElementById('checkinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedPain) {
+                alert('Please select your pain level');
+                return;
+            }
+
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const patientId = document.getElementById('patientName').textContent;
+                const notes = document.getElementById('notes').value;
+
+                // Submit check-in
+                await addDoc(collection(db, 'checkins'), {
+                    patientId: patientId,
+                    pain: selectedPain,
+                    symptoms: selectedSymptoms,
+                    notes: notes,
+                    timestamp: serverTimestamp()
+                });
+
+                // Auto-generate alert if needed
+                if (selectedPain >= 7 || 
+                    (selectedSymptoms.includes('fever') && selectedPain >= 6) ||
+                    (selectedSymptoms.includes('swelling') && selectedPain >= 7)) {
+                    
+                    const alertLevel = selectedPain >= 8 ? 'critical' : 'warning';
+                    
+                    await addDoc(collection(db, 'alerts'), {
+                        patientId: patientId,
+                        pain: selectedPain,
+                        symptoms: selectedSymptoms,
+                        level: alertLevel,
+                        createdAt: serverTimestamp()
+                    });
+                }
+
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('checkinForm').reset();
+                
+                // Reset selections
+                selectedPain = null;
+                selectedSymptoms = [];
+                document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
+                document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.classList.remove('selected'));
+
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error submitting check-in:', error);
+                alert('Error submitting check-in. Please try again.');
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Check-in';
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generatePainScale();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecoveryLink - Login Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .login-form {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .login-btn {
+      background: #2563eb;
+      color: white;
+    }
+    .demo-btn {
+      background: #50BFC3;
+      color: white;
+    }
+    .demo-info {
+      background: #f0f9ff;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      font-size: 14px;
+      color: #0369a1;
+    }
+    .error {
+      color: red;
+      margin: 10px 0;
+    }
+    .success {
+      color: green;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-form">
+    <h2>RecoveryLink Login</h2>
+    
+    <div class="demo-info">
+      <strong>Demo Credentials:</strong><br>
+      Patient: patient.demo@recoverylink.app / Patient@123<br>
+      Doctor: doctor.demo@recoverylink.app / Doctor@123
+    </div>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    
+    <button class="login-btn" id="loginBtn">Login</button>
+    <button class="demo-btn" id="demoPatientBtn">Demo Patient Login</button>
+    <button class="demo-btn" id="demoDoctorBtn">Demo Doctor Login</button>
+    
+    <div id="message"></div>
+  </div>
+
+  <script type="module">
+    console.log("Login test page loaded");
+
+    // Demo credentials
+    const DEMO_ACCOUNTS = {
+      patient: {
+        email: "patient.demo@recoverylink.app",
+        password: "Patient@123"
+      },
+      doctor: {
+        email: "doctor.demo@recoverylink.app", 
+        password: "Doctor@123"
+      }
+    };
+
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(text, isError = false) {
+      messageDiv.innerHTML = `<div class="${isError ? 'error' : 'success'}">${text}</div>`;
+    }
+
+    // Demo login buttons
+    document.getElementById('demoPatientBtn').onclick = () => {
+      document.getElementById('email').value = DEMO_ACCOUNTS.patient.email;
+      document.getElementById('password').value = DEMO_ACCOUNTS.patient.password;
+      showMessage('Demo patient credentials filled');
+    };
+
+    document.getElementById('demoDoctorBtn').onclick = () => {
+      document.getElementById('email').value = DEMO_ACCOUNTS.doctor.email;
+      document.getElementById('password').value = DEMO_ACCOUNTS.doctor.password;
+      showMessage('Demo doctor credentials filled');
+    };
+
+    // Login functionality
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showMessage('Please fill in all fields', true);
+        return;
+      }
+
+      showMessage('Attempting login...');
+
+      try {
+        // Import Firebase modules
+        const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js");
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js");
+        const { auth, db } = await import("./firebase.js");
+
+        showMessage('Firebase modules loaded, signing in...');
+
+        // Sign in
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCred.user;
+
+        showMessage('User signed in, checking role...');
+
+        // Get user role
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (!userDoc.exists()) {
+          showMessage('User role not found. Creating demo accounts...', true);
+          
+          // Try to create demo accounts
+          const { createDemoAccounts } = await import("./auth.js");
+          await createDemoAccounts();
+          
+          showMessage('Demo accounts created. Please try logging in again.');
+          return;
+        }
+
+        const userData = userDoc.data();
+        showMessage(`Login successful! Role: ${userData.role}`);
+
+        // Store role and redirect
+        localStorage.setItem("role", userData.role);
+
+        setTimeout(() => {
+          if (userData.role === "patient") {
+            window.location.href = "patient.html";
+          } else if (userData.role === "doctor") {
+            window.location.href = "doctor.html";
+          }
+        }, 1000);
+
+      } catch (error) {
+        console.error("Login error:", error);
+        showMessage(`Login failed: ${error.message}`, true);
+        
+        if (error.code === 'auth/user-not-found') {
+          showMessage('Creating demo accounts...', false);
+          try {
+            const { createDemoAccounts } = await import("./auth.js");
+            await createDemoAccounts();
+            showMessage('Demo accounts created. Please try logging in again.');
+          } catch (createError) {
+            showMessage(`Error creating demo accounts: ${createError.message}`, true);
+          }
+        }
+      }
+    };
+  </script>
+</body>
+</html>

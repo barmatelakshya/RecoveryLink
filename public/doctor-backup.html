@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecoveryLink — Doctor Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px;
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+    }
+
+    .sidebar-logo {
+      padding: 0 24px 32px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #14b8a6;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 12px 24px;
+      color: #94a3b8;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover {
+      background: #334155;
+      color: white;
+    }
+
+    .nav-item.active {
+      background: #14b8a6;
+      color: white;
+      font-weight: 600;
+    }
+
+    .sidebar-logout {
+      padding: 24px;
+      color: #64748b;
+      cursor: pointer;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 20px 32px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .top-bar h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .filter-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .search-input {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 200px;
+    }
+
+    /* CONTENT AREA */
+    .content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .patients-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .patient-row {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .patient-row:hover {
+      background: #f8fafc;
+    }
+
+    .patient-row.critical {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+    }
+
+    .patient-row.check {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .patient-row.stable {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-stable {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-check {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-critical {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .pain-level {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .pain-critical {
+      color: #dc2626;
+    }
+
+    .pain-moderate {
+      color: #d97706;
+    }
+
+    .pain-stable {
+      color: #059669;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    /* PATIENT DETAIL PANEL */
+    .patient-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100vh;
+      background: white;
+      box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .patient-panel.open {
+      right: 0;
+    }
+
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #64748b;
+    }
+
+    .panel-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .patient-info {
+      margin-bottom: 24px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .info-label {
+      color: #64748b;
+    }
+
+    .info-value {
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 24px 0 12px 0;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">RecoveryLink</div>
+    
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-section="dashboard">Dashboard</a>
+      <a class="nav-item" data-section="patients">Patients</a>
+      <a class="nav-item" data-section="alerts">Alerts</a>
+      <a class="nav-item" data-section="messages">Messages</a>
+      <a class="nav-item" data-section="settings">Settings</a>
+    </nav>
+
+    <div class="sidebar-logout">Logout</div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <h1>Patient Triage Board</h1>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="critical">Critical</button>
+        <button class="filter-btn" data-filter="stable">Stable</button>
+        <input type="text" class="search-input" placeholder="Search patient..." id="searchInput">
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- ADD PATIENT SECTION -->
+      <div class="add-patient" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="margin: 0 0 16px 0; color: #374151;">Add Patient to Track</h3>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input id="patientIdInput" placeholder="Enter Patient ID" style="flex: 1; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;" />
+          <button id="addPatientBtn" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Add Patient</button>
+        </div>
+        <p id="addPatientMsg" style="margin: 12px 0 0 0; font-size: 14px;"></p>
+      </div>
+
+      <div class="patients-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Condition</th>
+              <th>Days</th>
+              <th>Pain</th>
+              <th>Status</th>
+              <th>Last Update</th>
+            </tr>
+          </thead>
+          <tbody id="patientsTableBody">
+            <tr>
+              <td colspan="6" class="no-data">Loading patients...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PATIENT DETAIL PANEL -->
+  <div class="patient-panel" id="patientPanel">
+    <div class="panel-header">
+      <h3 id="panelPatientName">Patient Details</h3>
+      <button class="panel-close" onclick="closePatientPanel()">×</button>
+    </div>
+    <div class="panel-content">
+      <div class="patient-info" id="patientInfo">
+        <!-- Patient info will be populated here -->
+      </div>
+      <div class="section-title">Recent Check-ins</div>
+      <div id="patientCheckins">
+        <!-- Check-ins will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, auth } from "./firebase.js";
+    import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    let currentPatients = [];
+
+    // Protect doctor dashboard with role checking
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log("No user logged in, redirecting to login...");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        // Check user role
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (!userDoc.exists()) {
+          console.log("User role not found, redirecting to login...");
+          await auth.signOut();
+          window.location.href = "login.html";
+          return;
+        }
+
+        const userRole = userDoc.data().role;
+        
+        if (userRole !== "doctor") {
+          console.log("Access denied: not a doctor, redirecting...");
+          window.location.href = "login.html";
+          return;
+        }
+
+        console.log("Doctor access granted:", user.uid);
+        
+        // Initialize dashboard when user is authenticated and authorized
+        loadPatients();
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        window.location.href = "login.html";
+      }
+    });
+
+    // Load patients with real-time updates from checkins collection
+    function loadPatients() {
+      const checkinsQuery = query(
+        collection(db, "checkins"),
+        orderBy("createdAt", "desc")
+      );
+
+      onSnapshot(checkinsQuery, (snapshot) => {
+        const patientsTableBody = document.getElementById('patientsTableBody');
+        
+        if (snapshot.empty) {
+          patientsTableBody.innerHTML = '<tr><td colspan="6" class="no-data">No patient data available</td></tr>';
+          return;
+        }
+
+        // Clear existing data
+        patientsTableBody.innerHTML = "";
+        currentPatients = [];
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          currentPatients.push(d);
+
+          // Status logic (industrial standard)
+          const status = 
+            d.painLevel >= 8 ? "🔴 CRITICAL" :
+            d.painLevel >= 5 ? "🟡 CHECK" :
+            "🟢 Stable";
+
+          const rowClass =
+            d.painLevel >= 8 ? "patient-row critical" :
+            d.painLevel >= 5 ? "patient-row check" :
+            "patient-row stable";
+
+          const painClass =
+            d.painLevel >= 8 ? "pain-critical" :
+            d.painLevel >= 5 ? "pain-moderate" :
+            "pain-stable";
+
+          // Calculate days (mock for now)
+          const daysSince = Math.floor(Math.random() * 10) + 1;
+          
+          // Format time
+          const timeAgo = d.createdAt ? 
+            new Date(d.createdAt.seconds * 1000).toLocaleTimeString() : 
+            'Just now';
+
+          const row = `
+            <tr class="${rowClass}" onclick="openPatientPanel('${d.patientId}')">
+              <td>${d.patientName || d.patientId?.substring(0, 8) + '...' || 'Unknown'}</td>
+              <td>${d.condition || 'Recovery'}</td>
+              <td>${daysSince} days</td>
+              <td><span class="pain-level ${painClass}">${d.painLevel}/10</span></td>
+              <td><span class="status-badge">${status}</span></td>
+              <td>${timeAgo}</td>
+            </tr>
+          `;
+
+          patientsTableBody.insertAdjacentHTML("beforeend", row);
+        });
+      });
+    }
+
+    // Render patients table
+    function renderPatients(patients) {
+      const patientsTableBody = document.getElementById('patientsTableBody');
+      
+      if (patients.length === 0) {
+        patientsTableBody.innerHTML = '<tr><td colspan="6" class="no-data">No patients match the current filter</td></tr>';
+        return;
+      }
+
+      const patientsHTML = patients.map(patient => {
+        const painLevel = patient.painLevel;
+        const daysSince = Math.floor((new Date() - new Date(patient.createdAt.toDate())) / (1000 * 60 * 60 * 24));
+        
+        // Status logic
+        let statusClass = 'stable';
+        let statusText = '🟢 Stable';
+        let painClass = 'pain-stable';
+        let rowClass = 'patient-row';
+        
+        if (painLevel >= 8) {
+          statusClass = 'critical';
+          statusText = '🔴 Critical';
+          painClass = 'pain-critical';
+          rowClass = 'patient-row critical';
+        } else if (painLevel >= 5) {
+          statusClass = 'check';
+          statusText = '🟡 Check';
+          painClass = 'pain-moderate';
+        }
+
+        const timeAgo = getTimeAgo(patient.createdAt.toDate());
+
+        return `
+          <tr class="${rowClass}" onclick="openPatientPanel('${patient.patientId}')">
+            <td>${patient.patientId.substring(0, 8)}...</td>
+            <td>Recovery</td>
+            <td>${daysSince} days</td>
+            <td><span class="pain-level ${painClass}">${painLevel}/10</span></td>
+            <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+            <td>${timeAgo}</td>
+          </tr>
+        `;
+      }).join('');
+
+      patientsTableBody.innerHTML = patientsHTML;
+    }
+
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active filter
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const filter = btn.dataset.filter;
+        const rows = document.querySelectorAll('.patient-row');
+        
+        rows.forEach(row => {
+          if (filter === 'all') {
+            row.style.display = '';
+          } else if (filter === 'critical') {
+            row.style.display = row.classList.contains('critical') ? '' : 'none';
+          } else if (filter === 'stable') {
+            row.style.display = row.classList.contains('stable') ? '' : 'none';
+          }
+        });
+      });
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('.patient-row');
+      
+      rows.forEach(row => {
+        const patientName = row.cells[0].textContent.toLowerCase();
+        row.style.display = patientName.includes(searchTerm) ? '' : 'none';
+      });
+    });
+
+    // Patient panel functions
+    window.openPatientPanel = async function(patientId) {
+      const panel = document.getElementById('patientPanel');
+      const patientName = document.getElementById('panelPatientName');
+      const patientInfo = document.getElementById('patientInfo');
+      const patientCheckins = document.getElementById('patientCheckins');
+      
+      patientName.textContent = `Patient: ${patientId.substring(0, 8)}...`;
+      
+      // Load patient info
+      try {
+        const patientDoc = await getDoc(doc(db, "patients", patientId));
+        if (patientDoc.exists()) {
+          const data = patientDoc.data();
+          patientInfo.innerHTML = `
+            <div class="info-item">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${data.name || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Email:</span>
+              <span class="info-value">${data.email || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Role:</span>
+              <span class="info-value">${data.role || 'N/A'}</span>
+            </div>
+          `;
+        }
+        
+        // Load recent check-ins
+        const checkinsQuery = query(
+          collection(db, "dailyCheckins"),
+          where("patientId", "==", patientId),
+          orderBy("createdAt", "desc")
+        );
+        
+        const checkinsSnapshot = await getDocs(checkinsQuery);
+        
+        if (checkinsSnapshot.empty) {
+          patientCheckins.innerHTML = '<div class="no-data">No check-ins available</div>';
+        } else {
+          const checkinsHTML = checkinsSnapshot.docs.map(doc => {
+            const checkin = doc.data();
+            return `
+              <div style="padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px;">
+                <div><strong>Pain:</strong> ${checkin.painLevel}/10</div>
+                <div><strong>Symptoms:</strong> ${checkin.symptoms.join(', ') || 'None'}</div>
+                <div><strong>Date:</strong> ${checkin.date}</div>
+              </div>
+            `;
+          }).join('');
+          
+          patientCheckins.innerHTML = checkinsHTML;
+        }
+        
+      } catch (error) {
+        console.error('Error loading patient details:', error);
+        patientInfo.innerHTML = '<div class="no-data">Error loading patient information</div>';
+      }
+      
+      panel.classList.add('open');
+    };
+
+    window.closePatientPanel = function() {
+      document.getElementById('patientPanel').classList.remove('open');
+    };
+
+    // Logout functionality
+    document.querySelector('.sidebar-logout').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
+    });
+
+    // Helper function for time ago
+    function getTimeAgo(date) {
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours} hr ago`;
+      return `${diffDays} days ago`;
+    }
+  </script>
+
+</body>
+</html>

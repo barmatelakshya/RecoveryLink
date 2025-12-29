@@ -198,6 +198,49 @@
             color: #6c757d;
         }
 
+        .chat-window {
+            background: #f8f9fa;
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.patient {
+            background: #50BFC3;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.doctor {
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+
         .success-msg {
             background: #d4edda;
             color: #155724;
@@ -207,20 +250,6 @@
             display: none;
         }
 
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 8px;
-            height: 60px;
-            margin-bottom: 15px;
-        }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
         .empty {
             text-align: center;
             color: #6c757d;
@@ -228,29 +257,24 @@
             padding: 40px;
         }
 
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transform: translateX(400px);
-            transition: transform 0.3s;
-            z-index: 1000;
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
         }
 
-        .toast.show {
-            transform: translateX(0);
-        }
+        .status-good { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-critical { background: #dc3545; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="welcome">
-            <span id="greeting">Good Morning</span>, <span id="patientName">Loading...</span>
+            <span class="status-indicator status-good"></span>
+            Welcome back, <span id="patientName">Loading...</span>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
@@ -258,6 +282,7 @@
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="showTab('checkin')">📝 Check-in</button>
         <button class="tab-btn" onclick="showTab('history')">📊 History</button>
+        <button class="tab-btn" onclick="showTab('chat')">💬 Chat</button>
         <button class="tab-btn" onclick="showTab('profile')">👤 Profile</button>
     </div>
 
@@ -267,18 +292,18 @@
             <h2>Daily Health Check-in</h2>
             
             <div class="success-msg" id="checkinSuccess">
-                ✅ Vitals logged successfully! Next check-in tomorrow.
+                ✅ Check-in submitted successfully! Your doctor has been notified.
             </div>
 
             <form id="checkinForm">
                 <div class="form-group">
-                    <label>Pain Level (1 = No pain, 10 = Severe pain)</label>
+                    <label>How is your pain level today? (1 = No pain, 10 = Severe pain)</label>
                     <div class="pain-scale" id="painScale"></div>
                     <input type="hidden" id="painLevel" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Symptoms</label>
+                    <label>Are you experiencing any symptoms?</label>
                     <div class="symptoms-grid">
                         <div class="symptom-checkbox" onclick="toggleSymptom(this, 'fever')">
                             <input type="checkbox" value="fever"> 🌡️ Fever
@@ -292,15 +317,21 @@
                         <div class="symptom-checkbox" onclick="toggleSymptom(this, 'swelling')">
                             <input type="checkbox" value="swelling"> 🔴 Swelling
                         </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'bleeding')">
+                            <input type="checkbox" value="bleeding"> 🩸 Bleeding
+                        </div>
+                        <div class="symptom-checkbox" onclick="toggleSymptom(this, 'shortness_of_breath')">
+                            <input type="checkbox" value="shortness_of_breath"> 🫁 Shortness of Breath
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="notes">Notes</label>
-                    <textarea id="notes" rows="3" placeholder="Any concerns..."></textarea>
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Any other concerns or observations..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="submitBtn">Log Vitals</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Submit Check-in</button>
             </form>
         </section>
 
@@ -308,9 +339,21 @@
         <section id="history-section" class="page-section">
             <h2>📊 Health History</h2>
             <div id="historyList">
-                <div class="skeleton"></div>
-                <div class="skeleton"></div>
-                <div class="skeleton"></div>
+                <div class="empty">Loading your health history...</div>
+            </div>
+        </section>
+
+        <!-- CHAT SECTION -->
+        <section id="chat-section" class="page-section">
+            <h2>💬 Chat with Doctor</h2>
+            <div class="chat-window">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty">No messages yet. Your doctor will contact you if needed.</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                </div>
             </div>
         </section>
 
@@ -324,7 +367,7 @@
 
             <div class="form-group">
                 <label for="nameInput">Full Name</label>
-                <input type="text" id="nameInput" placeholder="Enter your name">
+                <input type="text" id="nameInput" placeholder="Enter your full name">
             </div>
 
             <div class="form-group">
@@ -337,14 +380,17 @@
                 <input type="text" id="conditionInput" placeholder="e.g., Post-surgery recovery">
             </div>
 
+            <div class="form-group">
+                <label for="emergencyContact">Emergency Contact</label>
+                <input type="text" id="emergencyContact" placeholder="Emergency contact number">
+            </div>
+
             <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
         </section>
     </div>
 
-    <div class="toast" id="toast"></div>
-
     <script type="module">
-        import { db, auth } from './firebase.js';
+        import { db } from './firebase.js';
         import { 
             collection, 
             addDoc, 
@@ -355,25 +401,13 @@
             where,
             orderBy,
             onSnapshot,
-            serverTimestamp,
-            onAuthStateChanged
+            serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         let selectedPain = null;
         let selectedSymptoms = [];
-        let currentUser = null;
-
-        // Auth State
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loadUserProfile();
-                loadHistory();
-                checkDailyLimit();
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
+        let patientId = 'patient_' + Math.random().toString(36).substr(2, 9);
+        let currentChatId = `chat_${patientId}`;
 
         // Tab Navigation
         window.showTab = function(tabName) {
@@ -418,52 +452,54 @@
             }
         };
 
-        // CORE: Check-in Submission
+        // Check-in Form
         document.getElementById('checkinForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (!selectedPain) {
-                showToast('Please select your pain level', 'error');
+                alert('Please select your pain level');
                 return;
             }
 
             const submitBtn = document.getElementById('submitBtn');
             const today = new Date().toDateString();
-            const lastCheckin = localStorage.getItem(`lastCheckin_${currentUser.uid}`);
+            const lastCheckin = localStorage.getItem('lastCheckinDate');
 
             if (lastCheckin === today) {
-                showToast('Already submitted today', 'error');
+                alert('You have already submitted your check-in for today');
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            submitBtn.textContent = 'Submitting...';
 
             try {
                 const notes = document.getElementById('notes').value;
 
-                // 1. Save check-in to Firestore
                 await addDoc(collection(db, 'checkins'), {
-                    patientId: currentUser.uid,
-                    painLevel: selectedPain,
+                    patientId: patientId,
+                    pain: selectedPain,
                     symptoms: selectedSymptoms,
                     notes: notes,
                     createdAt: serverTimestamp()
                 });
 
-                // 2. Auto-generate alert if needed
-                if (selectedPain >= 7) {
+                // Auto-generate alert if needed
+                if (selectedPain >= 7 || 
+                    (selectedSymptoms.includes('fever') && selectedPain >= 6) ||
+                    (selectedSymptoms.includes('swelling') && selectedPain >= 7)) {
+                    
                     await addDoc(collection(db, 'alerts'), {
-                        patientId: currentUser.uid,
-                        painLevel: selectedPain,
-                        status: selectedPain >= 8 ? 'critical' : 'warning',
-                        createdAt: serverTimestamp(),
-                        seen: false
+                        patientId: patientId,
+                        pain: selectedPain,
+                        symptoms: selectedSymptoms,
+                        level: selectedPain >= 8 ? 'critical' : 'warning',
+                        createdAt: serverTimestamp()
                     });
                 }
 
-                // 3. Success state
-                localStorage.setItem(`lastCheckin_${currentUser.uid}`, today);
+                // Success feedback
+                localStorage.setItem('lastCheckinDate', today);
                 document.getElementById('checkinSuccess').style.display = 'block';
                 document.getElementById('checkinForm').reset();
                 
@@ -472,8 +508,7 @@
                 document.querySelectorAll('.pain-btn').forEach(btn => btn.classList.remove('selected'));
                 document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.classList.remove('selected'));
 
-                submitBtn.textContent = 'Vitals Logged ✔';
-                showToast('Vitals logged successfully!', 'success');
+                submitBtn.textContent = 'Check-in Submitted ✔';
                 
                 setTimeout(() => {
                     document.getElementById('checkinSuccess').style.display = 'none';
@@ -481,37 +516,11 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Error saving vitals. Try again.', 'error');
+                alert('Error submitting check-in. Please try again.');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Log Vitals';
+                submitBtn.textContent = 'Submit Check-in';
             }
         });
-
-        // Load User Profile
-        async function loadUserProfile() {
-            try {
-                // Set time-based greeting
-                const hour = new Date().getHours();
-                let greetingText = "Good Morning";
-                if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
-                if (hour >= 17) greetingText = "Good Evening";
-                document.getElementById('greeting').textContent = greetingText;
-
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    document.getElementById('patientName').textContent = userData.name || 'Patient';
-                    document.getElementById('nameInput').value = userData.name || '';
-                    document.getElementById('ageInput').value = userData.age || '';
-                    document.getElementById('conditionInput').value = userData.condition || '';
-                } else {
-                    document.getElementById('patientName').textContent = 'Patient';
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-                document.getElementById('patientName').textContent = 'Patient';
-            }
-        }
 
         // Load Health History
         function loadHistory() {
@@ -519,7 +528,7 @@
             
             const q = query(
                 collection(db, 'checkins'),
-                where('patientId', '==', currentUser.uid),
+                where('patientId', '==', patientId),
                 orderBy('createdAt', 'desc')
             );
 
@@ -527,7 +536,7 @@
                 historyList.innerHTML = '';
                 
                 if (snapshot.empty) {
-                    historyList.innerHTML = '<div class="empty">No check-ins yet. Submit your first one!</div>';
+                    historyList.innerHTML = '<div class="empty">No check-ins yet. Submit your first check-in!</div>';
                     return;
                 }
 
@@ -538,8 +547,8 @@
                     const card = document.createElement('div');
                     card.className = 'history-card';
                     card.innerHTML = `
-                        <b>${date.toDateString()}</b>
-                        <p><strong>Pain:</strong> ${data.painLevel}/10</p>
+                        <b>${date.toDateString()} - ${date.toLocaleTimeString()}</b>
+                        <p><strong>Pain Level:</strong> ${data.pain}/10</p>
                         <p><strong>Symptoms:</strong> ${(data.symptoms || []).join(', ') || 'None'}</p>
                         ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
                     `;
@@ -548,21 +557,91 @@
             });
         }
 
+        // Load Chat Messages
+        function loadChat() {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const q = query(
+                collection(db, 'messages'),
+                where('chatId', '==', currentChatId),
+                orderBy('timestamp')
+            );
+            
+            onSnapshot(q, snapshot => {
+                chatMessages.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    chatMessages.innerHTML = '<div class="empty">No messages yet. Your doctor will contact you if needed.</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.sender}`;
+                    messageDiv.textContent = message.text;
+                    chatMessages.appendChild(messageDiv);
+                });
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+
+        // Send Message
+        window.sendMessage = async function() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+
+            try {
+                await addDoc(collection(db, 'messages'), {
+                    chatId: currentChatId,
+                    sender: 'patient',
+                    text: text,
+                    timestamp: serverTimestamp()
+                });
+
+                input.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+        // Load Profile
+        async function loadProfile() {
+            try {
+                const profileRef = doc(db, 'patients', patientId);
+                const snap = await getDoc(profileRef);
+                
+                if (snap.exists()) {
+                    const data = snap.data();
+                    document.getElementById('nameInput').value = data.name || '';
+                    document.getElementById('ageInput').value = data.age || '';
+                    document.getElementById('conditionInput').value = data.condition || '';
+                    document.getElementById('emergencyContact').value = data.emergencyContact || '';
+                    document.getElementById('patientName').textContent = data.name || 'Patient';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
         // Save Profile
         document.getElementById('saveProfileBtn').addEventListener('click', async () => {
             try {
-                await setDoc(doc(db, 'users', currentUser.uid), {
+                const profileRef = doc(db, 'patients', patientId);
+                
+                await setDoc(profileRef, {
                     name: document.getElementById('nameInput').value,
                     age: document.getElementById('ageInput').value,
                     condition: document.getElementById('conditionInput').value,
-                    role: 'patient',
-                    email: currentUser.email,
-                    createdAt: serverTimestamp()
+                    emergencyContact: document.getElementById('emergencyContact').value,
+                    patientId: patientId
                 }, { merge: true });
 
                 document.getElementById('profileSuccess').style.display = 'block';
                 document.getElementById('patientName').textContent = document.getElementById('nameInput').value || 'Patient';
-                showToast('Profile updated!', 'success');
                 
                 setTimeout(() => {
                     document.getElementById('profileSuccess').style.display = 'none';
@@ -570,33 +649,9 @@
 
             } catch (error) {
                 console.error('Error saving profile:', error);
-                showToast('Error saving profile', 'error');
+                alert('Error saving profile. Please try again.');
             }
         });
-
-        // Check Daily Limit
-        function checkDailyLimit() {
-            const today = new Date().toDateString();
-            const lastCheckin = localStorage.getItem(`lastCheckin_${currentUser.uid}`);
-            
-            if (lastCheckin === today) {
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Vitals Logged ✔';
-            }
-        }
-
-        // Toast Notifications
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
 
         // Logout
         window.logout = function() {
@@ -604,9 +659,32 @@
             window.location.href = 'login.html';
         };
 
+        // Check daily limit
+        function checkDailyLimit() {
+            const today = new Date().toDateString();
+            const lastCheckin = localStorage.getItem('lastCheckinDate');
+            
+            if (lastCheckin === today) {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Check-in Submitted ✔';
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             generatePainScale();
+            loadProfile();
+            loadHistory();
+            loadChat();
+            checkDailyLimit();
+        });
+
+        // Enter key for chat
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
     </script>
 </body>

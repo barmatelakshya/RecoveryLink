@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - Complete</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f7fa; }
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Alerts */
+        .alerts-controls { margin-bottom: 15px; }
+        .alerts-controls button { padding: 8px 16px; margin-right: 10px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .alerts-controls button.active { background: #50BFC3; color: white; }
+        
+        #alertsList { list-style: none; padding: 0; }
+        .alert { padding: 12px; margin-bottom: 8px; border-radius: 4px; border-left: 4px solid; }
+        .alert.critical { background: #fff5f5; border-left-color: #dc3545; }
+        .alert.warning { background: #fffbeb; border-left-color: #ffc107; }
+        .alert.new { font-weight: bold; }
+        .new-badge { background: #dc3545; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; float: right; }
+        .no-alerts { text-align: center; color: #6c757d; padding: 20px; }
+        
+        /* Chat */
+        #chatBox { height: 300px; border: 1px solid #ddd; padding: 10px; overflow-y: auto; margin-bottom: 10px; background: #f8f9fa; }
+        .message { margin-bottom: 10px; }
+        .message.sent { text-align: right; }
+        .message.received { text-align: left; }
+        .message-content { display: inline-block; padding: 8px 12px; border-radius: 12px; max-width: 70%; }
+        .message.sent .message-content { background: #50BFC3; color: white; }
+        .message.received .message-content { background: white; border: 1px solid #ddd; }
+        .message-time { font-size: 11px; color: #6c757d; margin-top: 2px; }
+        .no-messages, .loading { text-align: center; color: #6c757d; padding: 20px; }
+        
+        .chat-input { display: flex; gap: 10px; }
+        #chatInput { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        #sendChat { padding: 8px 16px; background: #50BFC3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>👨‍⚕️ Doctor Dashboard - Live Features</h1>
+    
+    <div class="dashboard">
+        <!-- Alerts Panel -->
+        <div class="panel">
+            <h2>🚨 Live Alerts</h2>
+            
+            <div class="alerts-controls">
+                <button data-filter="all" class="active">All</button>
+                <button data-filter="critical">Critical</button>
+                <button data-filter="warning">Warning</button>
+            </div>
+            
+            <ul id="alertsList">
+                <li class="loading">Loading alerts...</li>
+            </ul>
+        </div>
+        
+        <!-- Chat Panel -->
+        <div class="panel">
+            <h2>💬 Patient Chat</h2>
+            
+            <div style="margin-bottom: 10px;">
+                <button onclick="initChat('test-patient-123')">Start Chat with Test Patient</button>
+            </div>
+            
+            <div id="chatBox">
+                <div class="no-messages">Click "Start Chat" to begin</div>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your message..." disabled>
+                <button id="sendChat" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 15px; background: white; border-radius: 8px;">
+        <h3>🔥 Live Features Working:</h3>
+        <ul>
+            <li>✅ <strong>Live Alerts:</strong> Filter by Critical/Warning/All</li>
+            <li>✅ <strong>Real-time Chat:</strong> Messages sync instantly</li>
+            <li>✅ <strong>Auto-updates:</strong> No page refresh needed</li>
+            <li>✅ <strong>Professional UI:</strong> Hospital-grade interface</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // Import and initialize
+        import './doctor-alerts.js';
+        import './chat.js';
+        
+        // Enable chat input when chat is started
+        window.addEventListener('load', () => {
+            const originalInitChat = window.initChat;
+            window.initChat = function(patientId) {
+                originalInitChat(patientId);
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('sendChat').disabled = false;
+            };
+        });
+    </script>
+</body>
+</html>

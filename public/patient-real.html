@@ -250,7 +250,7 @@
 <body>
     <div class="header">
         <div class="welcome">
-            <span id="greeting">Good Morning</span>, <span id="patientName">Loading...</span>
+            Welcome back, <span id="patientName">Loading...</span>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
@@ -490,13 +490,6 @@
         // Load User Profile
         async function loadUserProfile() {
             try {
-                // Set time-based greeting
-                const hour = new Date().getHours();
-                let greetingText = "Good Morning";
-                if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
-                if (hour >= 17) greetingText = "Good Evening";
-                document.getElementById('greeting').textContent = greetingText;
-
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
@@ -509,7 +502,6 @@
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
-                document.getElementById('patientName').textContent = 'Patient';
             }
         }
 

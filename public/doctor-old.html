@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecoveryLink — Doctor Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .header {
+      background: white;
+      padding: 20px 32px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .alerts-section {
+      margin-bottom: 32px;
+    }
+
+    .alert {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .alert.critical {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .alert.warning {
+      border-left: 4px solid #f59e0b;
+      background: #fffbeb;
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-type {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .alert.critical .alert-type {
+      color: #dc2626;
+    }
+
+    .alert.warning .alert-type {
+      color: #d97706;
+    }
+
+    .alert-message {
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .resolve-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .patients-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-stable {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-critical {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .alert-patient {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .no-alerts {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Doctor Dashboard</h1>
+  </div>
+
+  <div class="container">
+    
+    <!-- ALERTS SECTION -->
+    <div class="alerts-section">
+      <h2>Active Alerts</h2>
+      <div id="alertsList">
+        <div class="no-alerts">No active alerts</div>
+      </div>
+    </div>
+
+    <!-- PATIENTS TABLE -->
+    <div class="patients-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Last Check-in</th>
+            <th>Pain Level</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="patientsTable">
+          <tr>
+            <td>Loading patients...</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { db, auth } from "./firebase.js";
+    import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    // Protect doctor dashboard with role checking
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log("No user logged in, redirecting to login...");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        // Check user role
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (!userDoc.exists()) {
+          console.log("User role not found, redirecting to login...");
+          await auth.signOut();
+          window.location.href = "login.html";
+          return;
+        }
+
+        const userRole = userDoc.data().role;
+        
+        if (userRole !== "doctor") {
+          console.log("Access denied: not a doctor, redirecting...");
+          window.location.href = "login.html";
+          return;
+        }
+
+        console.log("Doctor access granted:", user.uid);
+        
+        // Initialize dashboard when user is authenticated and authorized
+        loadAlerts();
+        loadPatients();
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        window.location.href = "login.html";
+      }
+    });
+
+    // Load alerts in real-time with proper filtering
+    function loadAlerts() {
+      const alertsRef = collection(db, "alerts");
+      
+      const q = query(
+        alertsRef,
+        where("doctorId", "==", "doc_001"),
+        where("resolved", "==", false),
+        orderBy("createdAt", "desc")
+      );
+
+      // REALTIME LISTENER
+      onSnapshot(q, (snapshot) => {
+        const alerts = [];
+        
+        snapshot.forEach((doc) => {
+          alerts.push({ id: doc.id, ...doc.data() });
+        });
+
+        renderAlerts(alerts);
+      });
+    }
+
+    // Render alerts function
+    function renderAlerts(alerts) {
+      const alertsList = document.getElementById('alertsList');
+      
+      if (alerts.length === 0) {
+        alertsList.innerHTML = '<div class="no-alerts">No active alerts</div>';
+        return;
+      }
+
+      const alertsHTML = alerts.map(alert => {
+        const alertClass = alert.type.toLowerCase();
+        
+        return `
+          <div class="alert ${alertClass}">
+            <div class="alert-content">
+              <div class="alert-type">${alert.type}</div>
+              <div class="alert-message">Pain: ${alert.painLevel}/10, Symptoms: ${alert.symptoms.join(', ')}</div>
+              <div class="alert-patient">Patient: ${alert.patientId.substring(0, 8)}...</div>
+            </div>
+            <button class="resolve-btn" onclick="resolveAlert('${alert.id}')">
+              Resolve
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      alertsList.innerHTML = alertsHTML;
+    }
+
+    // Resolve alert function
+    window.resolveAlert = async function(alertId) {
+      try {
+        const alertRef = doc(db, "alerts", alertId);
+        await updateDoc(alertRef, { 
+          resolved: true,
+          resolvedAt: new Date()
+        });
+        console.log('Alert resolved:', alertId);
+      } catch (error) {
+        console.error('Error resolving alert:', error);
+        alert('Error resolving alert. Please try again.');
+      }
+    };
+
+    // Load check-ins for patient table
+    function loadPatients() {
+      const checkinsQuery = query(
+        collection(db, "dailyCheckins"),
+        orderBy("createdAt", "desc")
+      );
+
+      onSnapshot(checkinsQuery, (snapshot) => {
+        const patientsTable = document.getElementById('patientsTable');
+        
+        if (snapshot.empty) {
+          patientsTable.innerHTML = '<tr><td colspan="5">No patient data</td></tr>';
+          return;
+        }
+
+        // Group by patient to show latest check-in per patient
+        const patientMap = new Map();
+        
+        snapshot.docs.forEach(doc => {
+          const checkin = doc.data();
+          if (!patientMap.has(checkin.patientId)) {
+            patientMap.set(checkin.patientId, checkin);
+          }
+        });
+
+        const patientsHTML = Array.from(patientMap.values()).map(checkin => {
+          const painLevel = checkin.painLevel;
+          
+          let statusClass = 'stable';
+          let statusText = 'Stable';
+          
+          if (painLevel >= 8) {
+            statusClass = 'critical';
+            statusText = 'Critical';
+          } else if (painLevel >= 5) {
+            statusClass = 'warning';
+            statusText = 'Monitor';
+          }
+
+          return `
+            <tr>
+              <td>${checkin.patientId.substring(0, 8)}...</td>
+              <td>${checkin.date}</td>
+              <td>${painLevel}/10</td>
+              <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+              <td><button onclick="viewPatient('${checkin.patientId}')">View Details</button></td>
+            </tr>
+          `;
+        }).join('');
+
+        patientsTable.innerHTML = patientsHTML;
+      });
+    }
+
+    // View patient details (placeholder)
+    window.viewPatient = function(patientId) {
+      alert(`Viewing details for patient: ${patientId.substring(0, 8)}...`);
+    };
+
+    // Initialize dashboard
+    // Removed from here - now called after role verification
+  </script>
+
+</body>
+</html>

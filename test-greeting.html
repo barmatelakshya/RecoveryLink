@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Dynamic Greeting</title>
+</head>
+<body>
+    <h1>Greeting Test</h1>
+    <div id="greeting">Loading...</div>, <span id="patientName">Loading...</span>
+    
+    <script>
+        // Test the time-based greeting logic
+        function testGreeting() {
+            const hour = new Date().getHours();
+            let greetingText = "Good Morning";
+            if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+            if (hour >= 17) greetingText = "Good Evening";
+            
+            document.getElementById('greeting').textContent = greetingText;
+            document.getElementById('patientName').textContent = "Test User";
+            
+            console.log(`Current hour: ${hour}, Greeting: ${greetingText}`);
+        }
+        
+        // Test immediately
+        testGreeting();
+        
+        // Test different times
+        console.log("Testing different times:");
+        [8, 14, 19].forEach(hour => {
+            let greetingText = "Good Morning";
+            if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+            if (hour >= 17) greetingText = "Good Evening";
+            console.log(`Hour ${hour}: ${greetingText}`);
+        });
+    </script>
+</body>
+</html>
