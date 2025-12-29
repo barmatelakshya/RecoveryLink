@@ -61,7 +61,7 @@ onAuthStateChanged(auth, async (user) => {
   console.log("✅ Auth fired, user:", user ? user.email : "null");
   
   if (!user) {
-    window.location.href = "/login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -237,7 +237,7 @@ function showSuccess(elementId) {
 window.logout = async function() {
   try {
     await signOut(auth);
-    window.location.href = "/login.html";
+    window.location.href = "/login";
   } catch (err) {
     console.error("Logout failed:", err);
   }

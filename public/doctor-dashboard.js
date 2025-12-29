@@ -37,7 +37,7 @@ onAuthStateChanged(auth, async (user) => {
   console.log("✅ Doctor auth fired, user:", user ? user.email : "null");
   
   if (!user) {
-    window.location.href = "/login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -47,12 +47,12 @@ onAuthStateChanged(auth, async (user) => {
     if (!userDoc.exists() || userDoc.data().role !== 'doctor') {
       console.warn("Access denied: not a doctor");
       await signOut(auth);
-      window.location.href = "/login.html";
+      window.location.href = "/login";
       return;
     }
   } catch (error) {
     console.error("Role validation failed:", error);
-    window.location.href = "/login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -229,7 +229,7 @@ window.markAlertSeen = async function(alertId) {
 window.logout = async function() {
   try {
     await signOut(auth);
-    window.location.href = "/login.html";
+    window.location.href = "/login";
   } catch (error) {
     console.error("Logout failed:", error);
   }

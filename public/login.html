@@ -193,9 +193,9 @@
                     const userData = userDoc.data();
                     
                     if (userData.role === 'doctor') {
-                        window.location.href = 'doctor-dashboard.html';
+                        window.location.href = '/doctor';
                     } else if (userData.role === 'patient') {
-                        window.location.href = 'patient-dashboard.html';
+                        window.location.href = '/patient';
                     } else {
                         showError('Invalid user role. Please contact support.');
                     }
@@ -208,7 +208,7 @@
                         createdAt: serverTimestamp()
                     });
                     
-                    window.location.href = 'patient-dashboard.html';
+                    window.location.href = '/patient';
                 }
             } catch (error) {
                 console.error('Role check failed:', error);

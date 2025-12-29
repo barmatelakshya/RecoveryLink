@@ -1,9 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TEMPORARY: Allow all authenticated users to read/write
-    // (We'll tighten this later after testing)
-    match /{document=**} {
+    
+    // Users collection - users can read/write their own data
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    
+    // Check-ins - patients can create, doctors can read all
+    match /checkins/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+    
+    // Alerts - all authenticated users can read
+    match /alerts/{docId} {
       allow read, write: if request.auth != null;
     }
   }

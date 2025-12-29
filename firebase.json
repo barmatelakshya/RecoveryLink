@@ -1,16 +1,12 @@
 {
   "hosting": {
     "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/patient", "destination": "/patient-dashboard.html" },
+      { "source": "/doctor", "destination": "/doctor-dashboard.html" },
+      { "source": "/login", "destination": "/login.html" },
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "firestore": {
