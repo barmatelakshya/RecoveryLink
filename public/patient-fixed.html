@@ -399,8 +399,14 @@
 
         // Initialize dashboard
         function initializePatientDashboard(user, userData) {
+          // Time-based greeting
+          const hour = new Date().getHours();
+          let greetingText = "Good Morning";
+          if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
+          if (hour >= 17) greetingText = "Good Evening";
+          
           // Update greeting
-          document.querySelector('.greeting').textContent = `Good Morning, ${userData.name || 'Patient'}`;
+          document.querySelector('.greeting').textContent = `${greetingText}, ${userData.name || 'Patient'}`;
           document.querySelector('.avatar').textContent = (userData.name || 'Patient').charAt(0).toUpperCase();
           
           // Update loading states

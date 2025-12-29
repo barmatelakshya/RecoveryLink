@@ -161,7 +161,7 @@
         <h1>🏥 Daily Check-in</h1>
         
         <div class="patient-info">
-            <strong>Patient:</strong> <span id="patientName">Rahul Sharma</span>
+            <strong>Patient:</strong> <span id="patientName">Loading...</span>
         </div>
 
         <div class="success-message" id="successMessage">
@@ -211,15 +211,45 @@
     </div>
 
     <script type="module">
-        import { db } from './firebase.js';
+        import { db, auth } from './firebase.js';
         import { 
             collection, 
             addDoc, 
+            doc,
+            getDoc,
             serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
         let selectedPain = null;
         let selectedSymptoms = [];
+        let currentUser = null;
+
+        // Auth state management
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadPatientName(user.uid);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Load patient name
+        async function loadPatientName(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    document.getElementById('patientName').textContent = userData.name || 'Patient';
+                } else {
+                    document.getElementById('patientName').textContent = 'Patient';
+                }
+            } catch (error) {
+                console.error('Error loading patient name:', error);
+                document.getElementById('patientName').textContent = 'Patient';
+            }
+        }
 
         // Generate pain scale buttons
         function generatePainScale() {
