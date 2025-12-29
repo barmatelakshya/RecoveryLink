@@ -190,9 +190,12 @@
 
         let currentUser = null;
 
-        // BULLETPROOF AUTH STATE
+        // BULLETPROOF AUTH STATE (SAFE VERSION)
         onAuthStateChanged(auth, async (user) => {
+            console.log("✅ Doctor auth fired, user:", user ? user.email : "null");
+            
             if (!user) {
+                console.log("No user logged in, redirecting to login");
                 window.location.href = 'login.html';
                 return;
             }
@@ -200,12 +203,22 @@
             // ROLE VALIDATION
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (!userDoc.exists() || userDoc.data().role !== 'doctor') {
-                    console.warn("Access denied: not a doctor");
+                if (!userDoc.exists()) {
+                    console.error("User document missing for:", user.uid);
                     await signOut(auth);
                     window.location.href = 'login.html';
                     return;
                 }
+                
+                const userData = userDoc.data();
+                if (userData.role !== 'doctor') {
+                    console.warn("Access denied: not a doctor, role:", userData.role);
+                    await signOut(auth);
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log("✅ Doctor access granted:", userData);
             } catch (error) {
                 console.error("Role validation failed:", error);
                 window.location.href = 'login.html';
@@ -216,7 +229,7 @@
             
             // IMMEDIATE UI UPDATE
             setTimeBasedGreeting();
-            document.getElementById('doctorName').textContent = 'Doctor';
+            document.getElementById('doctorName').textContent = user.email.split("@")[0];
             
             // LOAD DATA (non-blocking)
             await loadDoctorProfile();

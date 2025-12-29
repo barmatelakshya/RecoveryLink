@@ -179,21 +179,46 @@
         let currentUser = null;
         let selectedPain = null;
 
-        // BULLETPROOF AUTH STATE
+        // BULLETPROOF AUTH STATE (SAFE VERSION)
         onAuthStateChanged(auth, async (user) => {
+            console.log("✅ Auth fired, user:", user ? user.email : "null");
+            
             if (!user) {
+                console.log("No user logged in, redirecting to login");
                 window.location.href = 'login.html';
                 return;
             }
 
             currentUser = user;
             
-            // IMMEDIATE UI UPDATE (no loading dependencies)
+            // IMMEDIATE UI UPDATE (no dependencies)
             setTimeBasedGreeting();
-            document.getElementById('patientName').textContent = 'Patient';
+            document.getElementById('patientName').textContent = user.email.split("@")[0];
             
             // ENHANCE UI WITH DATA (non-blocking)
-            await loadUserProfile();
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                
+                if (!userDoc.exists()) {
+                    console.error("User profile missing in Firestore for:", user.uid);
+                    document.getElementById('patientName').textContent = user.email.split("@")[0];
+                    await createDefaultUserProfile();
+                } else {
+                    const userData = userDoc.data();
+                    console.log("✅ User data loaded:", userData);
+                    
+                    if (userData.name) {
+                        document.getElementById('patientName').textContent = userData.name;
+                        document.getElementById('nameInput').value = userData.name;
+                    }
+                    if (userData.age) document.getElementById('ageInput').value = userData.age;
+                    if (userData.condition) document.getElementById('conditionInput').value = userData.condition;
+                }
+            } catch (error) {
+                console.error('Firestore error:', error);
+                document.getElementById('patientName').textContent = user.email.split("@")[0];
+            }
+            
             generatePainScale();
         });
 
