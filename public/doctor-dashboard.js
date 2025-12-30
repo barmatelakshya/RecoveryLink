@@ -1,5 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -8,10 +12,11 @@ import {
   onSnapshot,
   doc,
   getDoc,
-  where,
-  updateDoc
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* ===== Firebase config (PRODUCTION) ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCmpw7urN4GPkdJoEkWuml3wfXMgHw13hM",
   authDomain: "finalrecoverylink.firebaseapp.com",
@@ -25,214 +30,134 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ===== DOM ===== */
 const doctorNameEl = document.getElementById("doctorName");
-const greetingEl = document.getElementById("greetingText");
-const tableBody = document.getElementById("checkinsTable");
+const tableBody = document.getElementById("patientTableBody");
 const alertsList = document.getElementById("alertsList");
-const totalPatientsEl = document.getElementById("totalPatients");
-const activeAlertsEl = document.getElementById("activeAlerts");
-const todayCheckinsEl = document.getElementById("todayCheckins");
 
-onAuthStateChanged(auth, async (user) => {
-  console.log("✅ Doctor auth fired, user:", user ? user.email : "null");
-  
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
+/* ===== State ===== */
+let allRows = [];
 
-  // Role validation
-  try {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (!userDoc.exists() || userDoc.data().role !== 'doctor') {
-      console.warn("Access denied: not a doctor");
-      await signOut(auth);
-      window.location.href = "/login";
-      return;
-    }
-  } catch (error) {
-    console.error("Role validation failed:", error);
-    window.location.href = "/login";
-    return;
-  }
-
-  // Immediate UI update
-  doctorNameEl.innerText = user.email.split("@")[0];
-  
-  // Set time-based greeting
-  const hour = new Date().getHours();
-  let greetingText = "Good Morning";
-  if (hour >= 12 && hour < 17) greetingText = "Good Afternoon";
-  if (hour >= 17) greetingText = "Good Evening";
-  if (greetingEl) greetingEl.innerText = greetingText;
-
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) {
-      const userData = snap.data();
-      if (userData.name) {
-        doctorNameEl.innerText = userData.name;
-      }
-    }
-  } catch (e) {
-    console.warn("Doctor profile not found");
-  }
-
-  loadPatients();
-  loadAlerts();
-  loadStats();
-});
-
-function getStatus(pain) {
+/* ===== Helpers ===== */
+function statusFromPain(pain) {
   if (pain >= 8) return "critical";
   if (pain >= 5) return "warning";
   return "stable";
 }
 
-let allPatients = [];
+function statusBadge(status) {
+  return `<span class="badge ${status}">${status.toUpperCase()}</span>`;
+}
 
-function loadPatients() {
+/* ===== AUTH ===== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "/login";
+    return;
+  }
+
+  // Immediate fallback
+  doctorNameEl.innerText = user.email.split("@")[0];
+
+  // Load doctor profile if exists
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      const userData = snap.data();
+      if (userData.role === 'doctor' && userData.name) {
+        doctorNameEl.innerText = userData.name;
+      }
+    }
+  } catch (e) {
+    console.warn("Doctor profile missing");
+  }
+
+  // Start live listeners
+  listenCheckins();
+  listenAlerts();
+});
+
+/* ===== LIVE TRIAGE TABLE ===== */
+function listenCheckins() {
   const q = query(collection(db, "checkins"), orderBy("createdAt", "desc"));
 
-  onSnapshot(q, async (snapshot) => {
-    allPatients = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
-    
-    await renderPatients(allPatients);
-    updateTodayCount(allPatients);
+  onSnapshot(q, (snap) => {
+    allRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTable(allRows);
   });
 }
 
-async function renderPatients(patients) {
+function renderTable(rows) {
   if (!tableBody) return;
   
   tableBody.innerHTML = "";
 
-  if (patients.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="5">No check-ins yet</td></tr>`;
+  if (!rows.length) {
+    tableBody.innerHTML = `<tr><td colspan="6">No patients yet</td></tr>`;
     return;
   }
 
-  // Get patient names
-  const patientNames = {};
-  for (const p of patients.slice(0, 20)) { // Limit to 20 for performance
-    if (!patientNames[p.patientId]) {
-      try {
-        const userDoc = await getDoc(doc(db, "users", p.patientId));
-        patientNames[p.patientId] = userDoc.exists() ? userDoc.data().name || 'Unknown Patient' : 'Unknown Patient';
-      } catch (error) {
-        patientNames[p.patientId] = 'Unknown Patient';
-      }
-    }
-  }
-
-  patients.slice(0, 20).forEach(p => {
-    const status = getStatus(p.pain);
-    const patientName = patientNames[p.patientId] || 'Unknown Patient';
-    const time = p.createdAt?.toDate()?.toLocaleString() || 'Unknown time';
-    const symptoms = Array.isArray(p.symptoms) ? p.symptoms.join(', ') : (p.symptoms || 'None');
-    
-    let painClass = 'pain-low';
-    if (p.pain >= 4 && p.pain <= 6) painClass = 'pain-medium';
-    if (p.pain >= 7) painClass = 'pain-high';
-
+  rows.forEach(r => {
+    const status = statusFromPain(r.painLevel || r.pain || 0);
+    const painLevel = r.painLevel || r.pain || 0;
     tableBody.innerHTML += `
-      <tr>
-        <td>${patientName}</td>
-        <td><span class="pain-badge ${painClass}">${p.pain}/10</span></td>
-        <td>${symptoms}</td>
-        <td>${time}</td>
-        <td>${p.notes || '-'}</td>
+      <tr class="row ${status}">
+        <td>${r.patientId.slice(0, 6)}</td>
+        <td>${painLevel}</td>
+        <td>${statusBadge(status)}</td>
+        <td>${(r.symptoms || []).join(", ")}</td>
+        <td>${r.createdAt?.toDate().toLocaleString() || "Now"}</td>
+        <td>
+          <button class="btn" onclick="openChat('${r.patientId}')">Chat</button>
+          <button class="btn danger" onclick="untrack('${r.id}')">Untrack</button>
+        </td>
       </tr>
     `;
   });
 }
 
-function loadAlerts() {
-  const q = query(
-    collection(db, "alerts"), 
-    where("seen", "==", false),
-    orderBy("createdAt", "desc")
-  );
+/* ===== FILTERS ===== */
+window.filterPatients = (type) => {
+  if (type === "all") return renderTable(allRows);
+  renderTable(allRows.filter(r => statusFromPain(r.painLevel || r.pain || 0) === type));
+};
 
-  onSnapshot(q, (snapshot) => {
+/* ===== ALERTS (AUTO-GENERATED) ===== */
+function listenAlerts() {
+  const q = query(collection(db, "alerts"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snap) => {
     if (!alertsList) return;
     
     alertsList.innerHTML = "";
-
-    if (snapshot.empty) {
-      alertsList.innerHTML = '<div class="empty-state">No active alerts</div>';
+    if (snap.empty) {
+      alertsList.innerHTML = "<li>No alerts</li>";
       return;
     }
-
-    snapshot.forEach(doc => {
-      const alert = doc.data();
-      const alertClass = alert.level === 'CRITICAL' ? 'critical' : 'warning';
-      const time = alert.createdAt?.toDate()?.toLocaleTimeString() || 'Unknown time';
-      
+    snap.forEach(d => {
+      const a = d.data();
       alertsList.innerHTML += `
-        <div class="alert-card ${alertClass}" onclick="markAlertSeen('${doc.id}')">
-          <strong>${alert.level}:</strong> ${alert.message}
-          <br><small>Time: ${time}</small>
-        </div>
+        <li class="${a.level?.toLowerCase() || 'warning'}">
+          <strong>${(a.level || 'WARNING').toUpperCase()}</strong>
+          – Pain ${a.pain || a.painLevel || 'N/A'} (Patient ${a.patientId.slice(0,6)})
+        </li>
       `;
     });
-
-    // Update alerts count
-    if (activeAlertsEl) {
-      activeAlertsEl.textContent = snapshot.size;
-    }
   });
 }
 
-function loadStats() {
-  // Count total patients
-  const usersQuery = query(
-    collection(db, "users"),
-    where("role", "==", "patient")
-  );
-
-  onSnapshot(usersQuery, (snapshot) => {
-    if (totalPatientsEl) {
-      totalPatientsEl.textContent = snapshot.size;
-    }
-  });
-}
-
-function updateTodayCount(patients) {
-  if (!todayCheckinsEl) return;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const todayCount = patients.filter(p => {
-    const checkinDate = p.createdAt?.toDate();
-    return checkinDate && checkinDate >= today;
-  }).length;
-  
-  todayCheckinsEl.textContent = todayCount;
-}
-
-window.markAlertSeen = async function(alertId) {
-  try {
-    await updateDoc(doc(db, "alerts", alertId), {
-      seen: true,
-      seenAt: new Date()
-    });
-  } catch (error) {
-    console.error("Failed to mark alert as seen:", error);
-  }
+/* ===== UNTRACK (local action demo) ===== */
+window.untrack = async (checkinId) => {
+  // For demo: log intent only. (Optional: delete doc if rules allow)
+  alert("Untracked check-in: " + checkinId);
 };
 
-window.logout = async function() {
-  try {
-    await signOut(auth);
-    window.location.href = "/login";
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
+/* ===== CHAT HOOK ===== */
+window.openChat = (patientId) => {
+  alert("Open chat with patient: " + patientId);
 };
 
-console.log("✅ Doctor dashboard JS loaded");
+/* ===== LOGOUT ===== */
+window.logout = async () => {
+  await signOut(auth);
+  window.location.href = "/login";
+};
